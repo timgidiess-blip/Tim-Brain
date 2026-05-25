@@ -20,6 +20,14 @@
   --ok:     oklch(72%  0.19 145);   /* green  */
   --warn:   oklch(80%  0.18  78);   /* amber  */
   --danger: oklch(68%  0.22  25);   /* red    */
+
+  --col-operator:   oklch(72% 0.19 195);
+  --col-finance:    oklch(72% 0.19 145);
+  --col-blockers:   oklch(68% 0.22  25);
+  --col-session:    oklch(72% 0.22 290);
+  --col-habits:     oklch(70% 0.19 225);
+  --col-priorities: oklch(80% 0.19  78);
+  --col-nutrition:  oklch(72% 0.19 158);
 }
 
 /* ── Tailwind v4: expose tokens as colour utilities ──────────────────
@@ -39,6 +47,21 @@
   --color-ok:         var(--ok);
   --color-warn:       var(--warn);
   --color-danger:     var(--danger);
+
+  --color-operator:   var(--col-operator);
+  --color-finance:    var(--col-finance);
+  --color-blockers:   var(--col-blockers);
+  --color-session:    var(--col-session);
+  --color-habits:     var(--col-habits);
+  --color-priorities: var(--col-priorities);
+  --color-nutrition:  var(--col-nutrition);
+
+  --animate-pulse-dot: pulse-dot 2.2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  55%       { opacity: 0.3; }
 }
 
 /* ── Base ─────────────────────────────────────────────────────────── */
