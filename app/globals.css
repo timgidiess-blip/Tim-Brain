@@ -1,26 +1,50 @@
 @import "tailwindcss";
 
+/* Use .dark class on <html> for the dark variant */
+@variant dark (&:where(.dark, .dark *));
+
+/* ── Design tokens ───────────────────────────────────────────────────
+   Ink scale: 0 = lightest (primary text)  →  4 = darkest (page bg).
+   All values are dark-first; add a .light selector to override later.
+   ─────────────────────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ink-0: oklch(96%  0.005 255);   /* primary text        */
+  --ink-1: oklch(80%  0.010 255);   /* secondary text      */
+  --ink-2: oklch(56%  0.014 255);   /* muted / placeholder */
+  --ink-3: oklch(28%  0.018 255);   /* borders / dividers  */
+  --ink-4: oklch( 9%  0.020 255);   /* page background     */
+
+  --accent:     oklch(72%  0.22 290);          /* violet            */
+  --accent-dim: oklch(72%  0.22 290 / 0.14);  /* tinted fill       */
+
+  --ok:     oklch(72%  0.19 145);   /* green  */
+  --warn:   oklch(80%  0.18  78);   /* amber  */
+  --danger: oklch(68%  0.22  25);   /* red    */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ── Tailwind v4: expose tokens as colour utilities ──────────────────
+   bg-ink-0 … bg-ink-4, text-ink-0 … text-ink-4,
+   bg-accent, text-accent, border-ok, ring-danger, etc.
+   ─────────────────────────────────────────────────────────────────── */
+@theme {
+  --color-ink-0:      var(--ink-0);
+  --color-ink-1:      var(--ink-1);
+  --color-ink-2:      var(--ink-2);
+  --color-ink-3:      var(--ink-3);
+  --color-ink-4:      var(--ink-4);
+
+  --color-accent:     var(--accent);
+  --color-accent-dim: var(--accent-dim);
+
+  --color-ok:         var(--ok);
+  --color-warn:       var(--warn);
+  --color-danger:     var(--danger);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ── Base ─────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    background-color: var(--ink-4);
+    color: var(--ink-0);
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
