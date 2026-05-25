@@ -3,10 +3,13 @@
 -- Initial schema: entities, raw_captures, tasks, daily_logs,
 --                 memory_chunks, audit_log
 --
+-- user_id is stored as TEXT (Telegram user ID, dashboard owner ID, etc.).
+-- No FK to auth.users — this is a single-owner dashboard; Supabase Auth is
+-- not used for the primary session layer. Swap to UUID + FK in a later
+-- migration if multi-user auth is added.
+--
 -- RLS: all tables locked down by default (deny-all permissive policy).
 --      service_role holds BYPASSRLS and ignores these policies entirely.
---      Application policies (per-user SELECT/INSERT/UPDATE/DELETE) live
---      in subsequent migrations.
 -- =============================================================================
 
 -- ── Extensions ────────────────────────────────────────────────────────────────
@@ -28,7 +31,7 @@ $$;
 -- People, companies, projects, accounts — anything worth remembering.
 CREATE TABLE entities (
   id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     UUID        NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
+  user_id     TEXT        NOT NULL,
   name        TEXT        NOT NULL,
   kind        TEXT        NOT NULL,        -- e.g. 'person' | 'company' | 'project'
   metadata    JSONB,
@@ -38,24 +41,24 @@ CREATE TABLE entities (
 -- Raw inputs from any capture surface before routing/processing.
 CREATE TABLE raw_captures (
   id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id        UUID        NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
-  source         TEXT        NOT NULL,     -- 'voice' | 'chat' | 'email' | 'webhook' …
+  user_id        TEXT        NOT NULL,
+  source         TEXT        NOT NULL,     -- 'telegram' | 'voice' | 'email' …
   raw_text       TEXT,
   audio_url      TEXT,
   classification JSONB,                   -- LLM-assigned labels / intent / entities
-  llm_source     TEXT,                    -- model that produced classification
+  llm_source     TEXT,                    -- 'claude' | 'openai' | 'regex'
   routed_to      TEXT,                    -- destination table, e.g. 'tasks'
-  routed_id      UUID,                    -- PK of the row that was created/updated
+  routed_id      UUID,                    -- PK of the row created/updated
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Action items, todos, projects.
 CREATE TABLE tasks (
   id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id           UUID        NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
+  user_id           TEXT        NOT NULL,
   title             TEXT        NOT NULL,
   description       TEXT,
-  urgency           TEXT,                  -- free-text or enum value (CRIT/HIGH/MED/LOW)
+  urgency           TEXT,                  -- 'today' | 'this_week' | 'this_month' | 'someday'
   key               BOOLEAN     NOT NULL DEFAULT FALSE,
   priority_score    NUMERIC,               -- computed score, higher = more urgent
   time_estimate_min INTEGER,               -- estimated effort in minutes
@@ -75,9 +78,9 @@ CREATE TRIGGER tasks_set_updated_at
 -- One log entry per user per calendar day (habits, nutrition, finance, goals).
 CREATE TABLE daily_logs (
   id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     UUID        NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
+  user_id     TEXT        NOT NULL,
   log_date    DATE        NOT NULL,
-  notes       TEXT,                        -- stores JSON blob for structured day data
+  notes       TEXT,                        -- JSON blob for structured day data
   mood        SMALLINT    CHECK (mood BETWEEN 1 AND 10),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -92,39 +95,42 @@ CREATE TRIGGER daily_logs_set_updated_at
 -- Vector store for semantic search across all content types.
 CREATE TABLE memory_chunks (
   id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     UUID        NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
-  source_type TEXT        NOT NULL,        -- 'task' | 'daily_log' | 'entity' | 'capture' …
-  source_id   UUID,                        -- FK to the originating row (loose reference)
+  user_id     TEXT        NOT NULL,
+  source_type TEXT        NOT NULL,        -- 'raw_capture' | 'task' | 'daily_log' …
+  source_id   UUID,                        -- loose FK to the originating row
   text        TEXT        NOT NULL,
   embedding   vector(1536),               -- text-embedding-3-small output dimension
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- IVFFlat ANN index — cosine distance.
--- lists = 100 is appropriate for up to ~1 M rows; revisit at scale
--- (rule of thumb: sqrt(row_count) lists, probe with SET ivfflat.probes).
+-- lists = 100 suits up to ~1 M rows; revisit at scale.
 CREATE INDEX memory_chunks_embedding_idx
   ON memory_chunks
   USING ivfflat (embedding vector_cosine_ops)
   WITH (lists = 100);
 
--- Immutable audit trail; user_id nullable to allow system-generated events.
+-- Immutable audit trail.
 CREATE TABLE audit_log (
   id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id       UUID        REFERENCES auth.users (id) ON DELETE SET NULL,
-  action        TEXT        NOT NULL,      -- 'insert' | 'update' | 'delete' | custom verb
-  resource_type TEXT        NOT NULL,      -- table name of the affected row
+  user_id       TEXT,
+  action        TEXT        NOT NULL,
+  resource_type TEXT        NOT NULL,
   resource_id   UUID,
-  metadata      JSONB,                    -- diff, request context, etc.
+  metadata      JSONB,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- ── Indexes ───────────────────────────────────────────────────────────────────
+
+CREATE INDEX entities_user_id_idx      ON entities      (user_id);
+CREATE INDEX raw_captures_user_id_idx  ON raw_captures  (user_id);
+CREATE INDEX tasks_user_id_idx         ON tasks         (user_id);
+CREATE INDEX daily_logs_user_id_idx    ON daily_logs    (user_id);
+CREATE INDEX memory_chunks_user_id_idx ON memory_chunks (user_id);
+CREATE INDEX audit_log_user_id_idx     ON audit_log     (user_id);
+
 -- ── Row Level Security ────────────────────────────────────────────────────────
--- Enabling RLS with a permissive USING(false) policy guarantees that no row
--- is accessible or writable for any role that does not hold BYPASSRLS
--- (only service_role does in Supabase).  This is intentionally more explicit
--- than relying on "no policies = deny"; replace each policy with real
--- per-user logic in subsequent migrations as features are built.
 
 ALTER TABLE entities      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE raw_captures  ENABLE ROW LEVEL SECURITY;
