@@ -3,7 +3,7 @@ import { COOKIE_NAME, verifyPassword, verifySession } from "@/lib/auth";
 
 // ── Route classification ──────────────────────────────────────────────────────
 
-const PUBLIC_EXACT = new Set(["/login"]);
+const PUBLIC_EXACT = new Set(["/login", "/api/telegram/webhook"]);
 const PUBLIC_PREFIX = ["/api/auth/", "/api/webhooks/"] as const;
 
 function isPublic(pathname: string): boolean {
