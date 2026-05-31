@@ -1,58 +1,103 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  startAuthentication,
+  startRegistration,
+} from "@simplewebauthn/browser";
 
-// Validates that the redirect target is a same-origin relative path.
 function safeFrom(raw: string | null): string {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/";
   return raw;
 }
 
-export default function LoginPage() {
-  const passwordRef = useRef<HTMLInputElement>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+const DIGITS = ["1","2","3","4","5","6","7","8","9","","0","⌫"];
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+export default function LoginPage() {
+  const [pin,        setPin]        = useState("");
+  const [error,      setError]      = useState<string | null>(null);
+  const [pending,    setPending]    = useState(false);
+  const [hasPasskey, setHasPasskey] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/webauthn/authenticate")
+      .then(r => { if (r.ok) setHasPasskey(true); })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (pin.length === 4) void submitPin(pin);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pin]);
+
+  async function submitPin(value: string) {
     setError(null);
     setPending(true);
-
     try {
       const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: passwordRef.current?.value ?? "" }),
+        method  : "POST",
+        headers : { "Content-Type": "application/json" },
+        body    : JSON.stringify({ pin: value }),
       });
-
       if (res.ok) {
-        // Hard navigation so the browser re-runs middleware with the new cookie.
         const from = safeFrom(new URLSearchParams(window.location.search).get("from"));
         window.location.href = from;
         return;
       }
-
-      const data: unknown = await res.json();
-      const msg =
-        data !== null &&
-        typeof data === "object" &&
-        "error" in data &&
-        typeof (data as Record<string, unknown>).error === "string"
-          ? (data as { error: string }).error
-          : "Login failed";
-
-      setError(msg);
-      passwordRef.current?.select();
+      const data = await res.json() as { error?: string };
+      setError(data.error ?? "Incorrect PIN");
+      setPin("");
     } catch {
       setError("Network error — please try again");
+      setPin("");
     } finally {
       setPending(false);
     }
   }
 
+  async function handleBiometric() {
+    setError(null);
+    setPending(true);
+    try {
+      const optRes = await fetch("/api/auth/webauthn/authenticate");
+      if (!optRes.ok) { setError("No passkey registered"); setPending(false); return; }
+      const options = await optRes.json();
+
+      const assertion = await startAuthentication({ optionsJSON: options });
+
+      const verRes = await fetch("/api/auth/webauthn/authenticate", {
+        method  : "POST",
+        headers : { "Content-Type": "application/json" },
+        body    : JSON.stringify(assertion),
+      });
+
+      if (verRes.ok) {
+        const from = safeFrom(new URLSearchParams(window.location.search).get("from"));
+        window.location.href = from;
+        return;
+      }
+      const data = await verRes.json() as { error?: string };
+      setError(data.error ?? "Biometric verification failed");
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name !== "NotAllowedError") {
+        setError("Biometric failed — use PIN instead");
+      }
+    } finally {
+      setPending(false);
+    }
+  }
+
+  function press(d: string) {
+    if (pending) return;
+    if (d === "⌫") { setPin(p => p.slice(0, -1)); setError(null); return; }
+    if (d === "")  return;
+    if (pin.length >= 4) return;
+    setPin(p => p + d);
+  }
+
   return (
     <main className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-[360px]">
+      <div className="w-full max-w-[320px]">
 
         {/* Brand */}
         <div className="flex items-center justify-center gap-2.5 mb-10">
@@ -91,65 +136,63 @@ export default function LoginPage() {
             boxShadow: "0 1px 2px oklch(0% 0 0 / 0.05), 0 16px 40px -20px oklch(0% 0 0 / 0.28)",
           }}
         >
-          {/* Heading */}
-          <h1 className="text-sm font-semibold text-ink-0 mb-1">
-            Sign in to your dashboard
-          </h1>
-          <p className="text-xs text-ink-2 mb-6">This is a private instance.</p>
+          <h1 className="text-sm font-semibold text-ink-0 mb-1 text-center">Enter your PIN</h1>
+          <p className="text-xs text-ink-2 mb-6 text-center">This is a private instance.</p>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            {/* Password field */}
-            <div>
-              <input
-                ref={passwordRef}
-                id="password"
-                name="password"
-                type="password"
-                autoFocus
-                autoComplete="current-password"
-                required
-                placeholder="Password"
-                aria-describedby={error ? "login-error" : undefined}
-                className={[
-                  "w-full rounded-lg px-3.5 py-2.5 text-sm",
-                  "bg-ink-4 text-ink-0 placeholder:text-ink-2",
-                  "border outline-none",
-                  "transition-[border-color,box-shadow] duration-150",
-                  "focus:ring-2 focus:ring-offset-0",
-                  error
-                    ? "border-danger/60 focus:border-danger/70 focus:ring-danger/20"
-                    : "border-ink-3 focus:border-accent/60 focus:ring-accent/20",
-                ].join(" ")}
+          {/* PIN dots */}
+          <div className="flex justify-center gap-4 mb-6">
+            {[0,1,2,3].map(i => (
+              <div
+                key={i}
+                className="w-3 h-3 rounded-full border-2 transition-all duration-150"
+                style={{
+                  borderColor : "var(--accent)",
+                  background  : i < pin.length ? "var(--accent)" : "transparent",
+                  transform   : i < pin.length ? "scale(1.15)" : "scale(1)",
+                }}
               />
-              {error && (
-                <p
-                  id="login-error"
-                  role="alert"
-                  className="mt-2 text-xs text-danger"
-                >
-                  {error}
-                </p>
-              )}
-            </div>
+            ))}
+          </div>
 
-            {/* Submit */}
+          {/* Error */}
+          {error && (
+            <p role="alert" className="text-xs text-danger text-center mb-4">{error}</p>
+          )}
+
+          {/* Number pad */}
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            {DIGITS.map((d, i) => (
+              <button
+                key={i}
+                onClick={() => press(d)}
+                disabled={pending || d === ""}
+                className={[
+                  "rounded-xl py-3 text-lg font-semibold transition-all duration-100",
+                  d === ""
+                    ? "invisible"
+                    : d === "⌫"
+                    ? "bg-ink-4 text-ink-1 hover:bg-ink-3 active:scale-95"
+                    : "bg-ink-4 text-ink-0 hover:bg-ink-3 active:scale-95",
+                  "disabled:opacity-40 disabled:cursor-not-allowed",
+                ].join(" ")}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
+
+          {/* Biometric button */}
+          {hasPasskey && (
             <button
-              type="submit"
+              onClick={handleBiometric}
               disabled={pending}
-              className={[
-                "w-full rounded-lg py-2.5 px-4",
-                "text-sm font-semibold",
-                "bg-accent transition-opacity duration-150",
-                "hover:opacity-90 active:opacity-75",
-                "disabled:cursor-not-allowed disabled:opacity-40",
-              ].join(" ")}
+              className="w-full rounded-xl py-2.5 text-sm font-semibold bg-accent hover:opacity-90 active:opacity-75 disabled:opacity-40 transition-opacity"
               style={{ color: "var(--ink-4)" }}
             >
-              {pending ? "Signing in…" : "Sign in"}
+              {pending ? "Verifying…" : "Touch ID / Face ID"}
             </button>
-          </form>
+          )}
         </div>
-
       </div>
     </main>
   );

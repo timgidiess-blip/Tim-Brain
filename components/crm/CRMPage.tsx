@@ -6,24 +6,26 @@ import KanbanView   from "./KanbanView";
 import SmartView    from "./SmartView";
 import CategoryView from "./CategoryView";
 import TaskDrawer   from "./TaskDrawer";
+import PinSettings  from "./PinSettings";
 
 const VIEW_KEY = "synapse:crm:view";
 
-const VIEWS: { id: CRMView; label: string }[] = [
+const VIEWS: { id: CRMView | "settings"; label: string }[] = [
   { id: "kanban",   label: "Kanban" },
   { id: "smart",    label: "✦ Smart" },
   { id: "category", label: "Category" },
+  { id: "settings", label: "⚙ Settings" },
 ];
 
 export default function CRMPage() {
   const [tasks,        setTasks]        = useState<Task[]>([]);
   const [entities,     setEntities]     = useState<Entity[]>([]);
   const [loading,      setLoading]      = useState(true);
-  const [view,         setView]         = useState<CRMView>("kanban");
+  const [view,         setView]         = useState<CRMView | "settings">("kanban");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);  // null = create
   const [drawerOpen,   setDrawerOpen]   = useState(false);
   const [newUrgency,   setNewUrgency]   = useState<Urgency>("this_week");
-  const viewRef = useRef<CRMView>("kanban");
+  const viewRef = useRef<CRMView | "settings">("kanban");
 
   /* ─── Restore view from localStorage ─── */
   useEffect(() => {
@@ -58,7 +60,7 @@ export default function CRMPage() {
   useEffect(() => { void loadData(); }, [loadData]);
 
   /* ─── View change ─── */
-  function changeView(v: CRMView) {
+  function changeView(v: CRMView | "settings") {
     setView(v);
     viewRef.current = v;
     try { localStorage.setItem(VIEW_KEY, v); } catch { /* ignore */ }
@@ -173,24 +175,26 @@ export default function CRMPage() {
         <div className="flex-1" />
 
         {/* Task count */}
-        {!loading && (
+        {!loading && view !== "settings" && (
           <span className="text-[12px]" style={{ color: "var(--ink-2)" }}>
             {tasks.filter(t => !t.completed_at).length} open
           </span>
         )}
 
         {/* New task button */}
-        <button
-          onClick={() => openCreate()}
-          className="flex items-center gap-[6px] px-3 py-[6px] rounded-[8px] text-[12px] font-semibold transition-all"
-          style={{
-            background: "var(--col-session)",
-            color:      "#000",
-          }}
-        >
-          <span className="text-[14px] leading-none">+</span>
-          New Task
-        </button>
+        {view !== "settings" && (
+          <button
+            onClick={() => openCreate()}
+            className="flex items-center gap-[6px] px-3 py-[6px] rounded-[8px] text-[12px] font-semibold transition-all"
+            style={{
+              background: "var(--col-session)",
+              color:      "#000",
+            }}
+          >
+            <span className="text-[14px] leading-none">+</span>
+            New Task
+          </button>
+        )}
       </div>
 
       {/* Loading state */}
@@ -226,6 +230,7 @@ export default function CRMPage() {
               onTaskClick={openEdit}
             />
           )}
+          {view === "settings" && <PinSettings />}
         </div>
       )}
 

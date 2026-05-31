@@ -1,50 +1,53 @@
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
-import {
-  COOKIE_NAME,
-  SESSION_COOKIE_OPTIONS,
-  signSession,
-  verifyPassword,
-} from "@/lib/auth";
+import { COOKIE_NAME, SESSION_COOKIE_OPTIONS, signSession } from "@/lib/auth";
+import { getDb } from "@/lib/supabase";
+import { OWNER_ID } from "@/lib/webauthn";
+
+const enc = new TextEncoder();
+
+async function hashPin(pin: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", enc.encode(pin));
+  return btoa(String.fromCharCode(...new Uint8Array(buf)));
+}
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const authSecret = process.env.AUTH_SECRET;
-  const dashPassword = process.env.DASHBOARD_PASSWORD;
-
-  if (!authSecret || !dashPassword) {
+  if (!authSecret) {
     return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
   }
 
-  // Parse body — be defensive; don't let a malformed payload throw a 500.
-  let password = "";
+  let pin = "";
   try {
-    const body: unknown = await req.json();
-    if (
-      body !== null &&
-      typeof body === "object" &&
-      "password" in body &&
-      typeof (body as Record<string, unknown>).password === "string"
-    ) {
-      password = (body as { password: string }).password;
-    }
+    const body = await req.json() as { pin?: string; password?: string };
+    pin = body.pin ?? body.password ?? "";
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  if (!password) {
-    return NextResponse.json({ error: "Password required" }, { status: 400 });
+  if (!pin) {
+    return NextResponse.json({ error: "PIN required" }, { status: 400 });
   }
 
-  const valid = await verifyPassword(password, dashPassword);
+  // Fetch stored PIN hash from DB (default: hash of "0000")
+  const db = getDb();
+  const { data } = await db
+    .from("user_settings")
+    .select("value")
+    .eq("user_id", OWNER_ID)
+    .eq("key", "pin_hash")
+    .maybeSingle();
 
-  if (!valid) {
-    // Small artificial delay to blunt brute-force without blocking the event loop.
+  const storedHash = data?.value ?? (await hashPin("0000"));
+  const candidateHash = await hashPin(pin);
+
+  if (candidateHash !== storedHash) {
     await new Promise<void>(r => setTimeout(r, 300));
-    return NextResponse.json({ error: "Invalid password" }, { status: 401 });
+    return NextResponse.json({ error: "Incorrect PIN" }, { status: 401 });
   }
 
   const token = await signSession(authSecret);
-  const jar = await cookies();
+  const jar   = await cookies();
   jar.set(COOKIE_NAME, token, SESSION_COOKIE_OPTIONS);
 
   return NextResponse.json({ ok: true });
