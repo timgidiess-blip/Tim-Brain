@@ -10,23 +10,7 @@ interface Blocker {
   body: string;
 }
 
-const BLOCKERS: Blocker[] = [
-  {
-    severity: "crit",
-    title: "API Rate Limit Hit",
-    body: "Production calls throttled since 08:12. Awaiting quota reset.",
-  },
-  {
-    severity: "high",
-    title: "Investor Deck Review",
-    body: "Pending sign-off from Jordan. Deadline: EOD Tue.",
-  },
-  {
-    severity: "med",
-    title: "CRM Data Migration",
-    body: "Legacy contacts not synced. Needs manual field mapping.",
-  },
-];
+const BLOCKERS: Blocker[] = [];
 
 const TAG_STYLES: Record<Severity, { bg: string; color: string; border: string; label: string }> = {
   crit: {
@@ -46,8 +30,22 @@ const TAG_STYLES: Record<Severity, { bg: string; color: string; border: string; 
 export default function KeyBlockersCard() {
   return (
     <Panel accent={ACCENT}>
-      <CardHeader title="Key Blockers" badge="3 Active" />
+      <CardHeader title="Key Blockers" badge={BLOCKERS.length > 0 ? `${BLOCKERS.length} Active` : "Clear"} />
 
+      {BLOCKERS.length === 0 ? (
+        <div
+          className="rounded-[9px] px-4 py-5 text-center"
+          style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}
+        >
+          <div className="text-[22px] mb-2 select-none">🛡️</div>
+          <div className="text-[12px] font-medium mb-1" style={{ color: "var(--ink-1)" }}>
+            No blockers
+          </div>
+          <div className="text-[10px]" style={{ color: "var(--ink-2)" }}>
+            Nothing flagged as blocked right now.
+          </div>
+        </div>
+      ) : (
       <div className="flex flex-col gap-2">
         {BLOCKERS.map((b) => {
           const tag = TAG_STYLES[b.severity];
@@ -82,6 +80,7 @@ export default function KeyBlockersCard() {
           );
         })}
       </div>
+      )}
     </Panel>
   );
 }

@@ -13,38 +13,27 @@ interface Priority {
   tagColor: string;
 }
 
-const PRIORITIES: Priority[] = [
-  {
-    num: "01", title: "Launch V2 Beta to 50 users",
-    tag: "Product", due: "Due: 28 May", barPct: 74,
-    accentColor: "var(--col-blockers)",
-    tagBg: "oklch(72% 0.22 290 / 0.14)", tagColor: "oklch(72% 0.22 290)",
-  },
-  {
-    num: "02", title: "Close Series A term sheet",
-    tag: "Ops", due: "Due: 05 Jun", barPct: 41,
-    accentColor: "oklch(75% 0.18 60)",
-    tagBg: "oklch(75% 0.18 60 / 0.14)", tagColor: "oklch(75% 0.18 60)",
-  },
-  {
-    num: "03", title: "Finalise AI memory architecture doc",
-    tag: "Research", due: "Due: 26 May", barPct: 88,
-    accentColor: "var(--col-habits)",
-    tagBg: "oklch(70% 0.19 225 / 0.14)", tagColor: "oklch(70% 0.19 225)",
-  },
-  {
-    num: "04", title: "Newsletter — May edition draft",
-    tag: "Comms", due: "Due: 31 May", barPct: 18,
-    accentColor: "var(--ink-2)",
-    tagBg: "oklch(72% 0.19 145 / 0.14)", tagColor: "oklch(72% 0.19 145)",
-  },
-];
+const PRIORITIES: Priority[] = [];
 
 export default function PrioritiesCard() {
   return (
     <Panel accent={ACCENT}>
-      <CardHeader title="Priorities" badge="4 Active" />
+      <CardHeader title="Priorities" badge={PRIORITIES.length > 0 ? `${PRIORITIES.length} Active` : "Empty"} />
 
+      {PRIORITIES.length === 0 ? (
+        <div
+          className="rounded-[10px] px-4 py-5 text-center"
+          style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}
+        >
+          <div className="text-[22px] mb-2 select-none">🎯</div>
+          <div className="text-[12px] font-medium mb-1" style={{ color: "var(--ink-1)" }}>
+            No priorities yet
+          </div>
+          <div className="text-[10px]" style={{ color: "var(--ink-2)" }}>
+            Your top priorities will show here.
+          </div>
+        </div>
+      ) : (
       <div className="flex flex-col gap-2">
         {PRIORITIES.map((p) => (
           <div
@@ -96,6 +85,7 @@ export default function PrioritiesCard() {
           </div>
         ))}
       </div>
+      )}
     </Panel>
   );
 }
