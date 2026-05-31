@@ -90,15 +90,15 @@ export default function TaskDrawer({ task, entities, onClose, onSave, onCreate, 
         className="fixed right-0 top-0 h-full z-50 flex flex-col"
         style={{
           width:      "min(480px, 95vw)",
-          background: "oklch(13% 0.022 255 / 0.97)",
-          borderLeft: "1px solid oklch(28% 0.030 255 / 0.55)",
+          background: "var(--surface)",
+          borderLeft: "1px solid var(--border)",
           backdropFilter: "blur(24px)",
         }}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between px-5 py-4 shrink-0"
-          style={{ borderBottom: "1px solid oklch(28% 0.030 255 / 0.45)" }}
+          style={{ borderBottom: "1px solid var(--border)" }}
         >
           <span className="text-[13px] font-semibold tracking-[0.04em]" style={{ color: "var(--ink-1)" }}>
             {isCreate ? "New Task" : "Edit Task"}
@@ -127,8 +127,8 @@ export default function TaskDrawer({ task, entities, onClose, onSave, onCreate, 
               onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSave(); }}
               className="w-full rounded-[8px] px-3 py-2 text-[14px] outline-none transition-colors"
               style={{
-                background: "oklch(20% 0.022 255 / 0.6)",
-                border:     "1px solid oklch(35% 0.025 255 / 0.55)",
+                background: "var(--surface-2)",
+                border:     "1px solid var(--border)",
                 color:      "var(--ink-0)",
               }}
               placeholder="What needs to get done?"
@@ -146,8 +146,8 @@ export default function TaskDrawer({ task, entities, onClose, onSave, onCreate, 
               rows={3}
               className="w-full rounded-[8px] px-3 py-2 text-[13px] outline-none transition-colors resize-none"
               style={{
-                background: "oklch(20% 0.022 255 / 0.6)",
-                border:     "1px solid oklch(35% 0.025 255 / 0.55)",
+                background: "var(--surface-2)",
+                border:     "1px solid var(--border)",
                 color:      "var(--ink-1)",
               }}
               placeholder="Optional details…"
@@ -165,8 +165,8 @@ export default function TaskDrawer({ task, entities, onClose, onSave, onCreate, 
                 onChange={e => set("urgency", e.target.value)}
                 className="w-full rounded-[8px] px-3 py-2 text-[13px] outline-none"
                 style={{
-                  background: "oklch(20% 0.022 255 / 0.6)",
-                  border:     "1px solid oklch(35% 0.025 255 / 0.55)",
+                  background: "var(--surface-2)",
+                  border:     "1px solid var(--border)",
                   color:      "var(--ink-0)",
                 }}
               >
@@ -186,7 +186,7 @@ export default function TaskDrawer({ task, entities, onClose, onSave, onCreate, 
                 style={
                   form.key
                     ? { background: "oklch(65% 0.18 78 / 0.20)", border: "1px solid oklch(80% 0.18 78 / 0.45)", color: "var(--col-priorities)" }
-                    : { background: "oklch(20% 0.022 255 / 0.6)", border: "1px solid oklch(35% 0.025 255 / 0.55)", color: "var(--ink-2)" }
+                    : { background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--ink-2)" }
                 }
               >
                 {form.key ? "🔑 Yes" : "— No"}
@@ -207,8 +207,8 @@ export default function TaskDrawer({ task, entities, onClose, onSave, onCreate, 
                 onChange={e => set("time_estimate_min", e.target.value ? Number(e.target.value) : null)}
                 className="w-full rounded-[8px] px-3 py-2 text-[13px] outline-none"
                 style={{
-                  background: "oklch(20% 0.022 255 / 0.6)",
-                  border:     "1px solid oklch(35% 0.025 255 / 0.55)",
+                  background: "var(--surface-2)",
+                  border:     "1px solid var(--border)",
                   color:      "var(--ink-0)",
                 }}
                 placeholder="e.g. 30"
@@ -225,10 +225,10 @@ export default function TaskDrawer({ task, entities, onClose, onSave, onCreate, 
                 onChange={e => set("due_date", e.target.value || null)}
                 className="w-full rounded-[8px] px-3 py-2 text-[13px] outline-none"
                 style={{
-                  background: "oklch(20% 0.022 255 / 0.6)",
-                  border:     "1px solid oklch(35% 0.025 255 / 0.55)",
+                  background: "var(--surface-2)",
+                  border:     "1px solid var(--border)",
                   color:      form.due_date ? "var(--ink-0)" : "var(--ink-2)",
-                  colorScheme: "dark",
+                  colorScheme: "light dark",
                 }}
               />
             </div>
@@ -245,8 +245,8 @@ export default function TaskDrawer({ task, entities, onClose, onSave, onCreate, 
                 onChange={e => set("entity_id", e.target.value || null)}
                 className="w-full rounded-[8px] px-3 py-2 text-[13px] outline-none"
                 style={{
-                  background: "oklch(20% 0.022 255 / 0.6)",
-                  border:     "1px solid oklch(35% 0.025 255 / 0.55)",
+                  background: "var(--surface-2)",
+                  border:     "1px solid var(--border)",
                   color:      "var(--ink-0)",
                 }}
               >
@@ -266,8 +266,8 @@ export default function TaskDrawer({ task, entities, onClose, onSave, onCreate, 
                 onChange={e => set("owner", e.target.value || null)}
                 className="w-full rounded-[8px] px-3 py-2 text-[13px] outline-none"
                 style={{
-                  background: "oklch(20% 0.022 255 / 0.6)",
-                  border:     "1px solid oklch(35% 0.025 255 / 0.55)",
+                  background: "var(--surface-2)",
+                  border:     "1px solid var(--border)",
                   color:      "var(--ink-0)",
                 }}
                 placeholder="e.g. @tim"
@@ -288,11 +288,11 @@ export default function TaskDrawer({ task, entities, onClose, onSave, onCreate, 
               }}
               className="w-full rounded-[8px] px-3 py-2 text-[13px] outline-none"
               style={{
-                background: "oklch(20% 0.022 255 / 0.6)",
-                border:     "1px solid oklch(35% 0.025 255 / 0.55)",
+                background: "var(--surface-2)",
+                border:     "1px solid var(--border)",
                 color:      "var(--ink-0)",
               }}
-              placeholder="synapse, mvp, q2-2026"
+              placeholder="tims-brain, mvp, q2-2026"
             />
           </div>
 
@@ -310,7 +310,7 @@ export default function TaskDrawer({ task, entities, onClose, onSave, onCreate, 
         {/* Footer actions */}
         <div
           className="shrink-0 px-5 py-4 flex items-center gap-2"
-          style={{ borderTop: "1px solid oklch(28% 0.030 255 / 0.45)" }}
+          style={{ borderTop: "1px solid var(--border)" }}
         >
           {/* Delete (edit only) */}
           {!isCreate && (
@@ -321,7 +321,7 @@ export default function TaskDrawer({ task, entities, onClose, onSave, onCreate, 
               style={
                 confirmDel
                   ? { background: "oklch(35% 0.16 25 / 0.35)", border: "1px solid oklch(68% 0.22 25 / 0.55)", color: "var(--danger)" }
-                  : { background: "transparent", border: "1px solid oklch(35% 0.025 255 / 0.45)", color: "var(--ink-2)" }
+                  : { background: "transparent", border: "1px solid var(--border)", color: "var(--ink-2)" }
               }
             >
               {deleting ? "Deleting…" : confirmDel ? "Confirm delete" : "Delete"}
@@ -348,7 +348,7 @@ export default function TaskDrawer({ task, entities, onClose, onSave, onCreate, 
           <button
             onClick={onClose}
             className="px-3 py-[7px] rounded-[8px] text-[12px] font-medium transition-all"
-            style={{ background: "transparent", border: "1px solid oklch(35% 0.025 255 / 0.45)", color: "var(--ink-2)" }}
+            style={{ background: "transparent", border: "1px solid var(--border-strong)", color: "var(--ink-2)" }}
           >
             Cancel
           </button>

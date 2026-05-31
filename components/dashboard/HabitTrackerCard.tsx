@@ -125,20 +125,20 @@ const CELL: Record<CellState, React.CSSProperties> = {
     cursor:     "pointer",
   },
   miss: {
-    background: "oklch(19% 0.02 255 / 0.60)",
-    border:     "1px solid oklch(28% 0.02 255 / 0.50)",
-    color:      "oklch(42% 0.018 255)",
+    background: "var(--surface-2)",
+    border:     "1px solid var(--border)",
+    color:      "var(--ink-2)",
     cursor:     "pointer",
   },
   empty: {
-    background: "oklch(20% 0.025 255 / 0.35)",
-    border:     "1px dashed oklch(30% 0.025 255 / 0.40)",
+    background: "var(--surface-2)",
+    border:     "1px dashed var(--border)",
     color:      "transparent",
     cursor:     "pointer",
   },
   future: {
-    background: "oklch(18% 0.020 255 / 0.20)",
-    border:     "1px dashed oklch(26% 0.020 255 / 0.25)",
+    background: "var(--surface)",
+    border:     "1px dashed var(--border)",
     color:      "transparent",
     cursor:     "default",
   },
@@ -237,11 +237,11 @@ export default function HabitTrackerCard() {
               <div key={dk} className="flex-1 flex flex-col items-center"
                 style={{ maxWidth: "28px" }}>
                 <span className="text-[9px] tracking-[0.05em]"
-                  style={{ color: isToday ? COL : "oklch(42% 0.018 255)" }}>
+                  style={{ color: isToday ? COL : "var(--ink-2)" }}>
                   {DAY_LABELS[i]}
                 </span>
                 <span className="text-[8px] font-mono"
-                  style={{ color: isToday ? COL : "oklch(36% 0.016 255)" }}>
+                  style={{ color: isToday ? COL : "var(--ink-2)" }}>
                   {d.getDate()}
                 </span>
               </div>
@@ -251,7 +251,7 @@ export default function HabitTrackerCard() {
         {/* Streak header */}
         <div className="w-[30px] shrink-0 text-right">
           <span className="text-[8px] tracking-[0.04em]"
-            style={{ color: "oklch(36% 0.016 255)" }}>
+            style={{ color: "var(--ink-2)" }}>
             STK
           </span>
         </div>
@@ -264,7 +264,7 @@ export default function HabitTrackerCard() {
           <div key={habit.id} className="flex items-center gap-1 mb-[7px] last:mb-0">
             {/* Label */}
             <span className="text-[11px] w-[88px] shrink-0 truncate"
-              style={{ color: "oklch(62% 0.018 255)" }}>
+              style={{ color: "var(--ink-1)" }}>
               {habit.label}
             </span>
 
@@ -303,7 +303,7 @@ export default function HabitTrackerCard() {
 
             {/* Streak */}
             <span className="text-[10px] font-mono w-[30px] text-right shrink-0"
-              style={{ color: streak > 0 ? COL : "oklch(36% 0.016 255)" }}>
+              style={{ color: streak > 0 ? COL : "var(--ink-2)" }}>
               {streak > 0
                 ? `${streak}${streak >= 3 ? "🔥" : ""}`
                 : "–"}
@@ -328,8 +328,8 @@ function NavBtn({
   return (
     <button type="button" onClick={onClick} disabled={disabled} title={title}
       className="w-[20px] h-[20px] rounded-[4px] flex items-center justify-center text-[13px] transition-opacity disabled:opacity-20"
-      style={{ background: "oklch(20% 0.025 255 / 0.50)",
-               border:     "1px solid oklch(28% 0.030 255 / 0.55)",
+      style={{ background: "var(--surface-2)",
+               border:     "1px solid var(--border)",
                color:      "var(--ink-1)" }}>
       {label}
     </button>

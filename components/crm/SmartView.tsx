@@ -80,8 +80,8 @@ export default function SmartView({ tasks, entities, onTaskClick }: Props) {
             onChange={e => setQuery(e.target.value)}
             className="w-full rounded-[10px] pl-9 pr-4 py-[10px] text-[13px] outline-none"
             style={{
-              background: "oklch(20% 0.022 255 / 0.6)",
-              border:     "1px solid oklch(35% 0.025 255 / 0.55)",
+              background: "var(--surface-2)",
+              border:     "1px solid var(--border)",
               color:      "var(--ink-0)",
             }}
             placeholder='Ask Claude anything — "what should I do this morning?"'
@@ -108,8 +108,8 @@ export default function SmartView({ tasks, entities, onTaskClick }: Props) {
             onClick={handleClear}
             className="px-3 py-[10px] rounded-[10px] text-[13px] transition-all"
             style={{
-              background: "oklch(20% 0.022 255 / 0.6)",
-              border:     "1px solid oklch(35% 0.025 255 / 0.55)",
+              background: "var(--surface-2)",
+              border:     "1px solid var(--border)",
               color:      "var(--ink-2)",
             }}
           >

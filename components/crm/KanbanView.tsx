@@ -92,7 +92,7 @@ function KanbanColumn({
       {open.length === 0 && (
         <div
           className="flex items-center justify-center py-6 rounded-[8px] text-[12px]"
-          style={{ border: "1px dashed oklch(35% 0.020 255 / 0.4)", color: "var(--ink-2)" }}
+          style={{ border: "1px dashed var(--border)", color: "var(--ink-2)" }}
         >
           Drop here
         </div>

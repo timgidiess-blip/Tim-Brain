@@ -17,7 +17,7 @@ const TYPE_META: Record<
   goal:    { icon: "🎯", label: "Goal",    color: "oklch(72% 0.19  20)", href: () => "/" },
 };
 
-const DEFAULT_META = { icon: "◆", label: "Memory", color: "oklch(60% 0.01 255)" };
+const DEFAULT_META = { icon: "◆", label: "Memory", color: "var(--ink-2)" };
 function getTypeMeta(source_type: string) { return TYPE_META[source_type] ?? DEFAULT_META; }
 
 // ── Formatting helpers ────────────────────────────────────────────────────────
@@ -41,12 +41,12 @@ function SimilarityBar({ value, color }: { value: number; color: string }) {
   return (
     <div className="flex items-center gap-2 shrink-0">
       <div className="h-[3px] w-[48px] rounded-full overflow-hidden"
-           style={{ background: "oklch(26% 0.02 255)" }}>
+           style={{ background: "var(--surface-2)" }}>
         <div className="h-full rounded-full transition-all"
              style={{ width: `${pct}%`, background: color }} />
       </div>
       <span className="text-[10px] font-mono tabular-nums"
-            style={{ color: "oklch(44% 0.018 255)" }}>
+            style={{ color: "var(--ink-2)" }}>
         {pct}%
       </span>
     </div>
@@ -77,18 +77,18 @@ function ResultCard({ chunk, dimmed }: { chunk: MemoryChunk; dimmed?: boolean })
     <div
       className="group flex gap-3 px-4 py-3.5 rounded-[12px] transition-all cursor-pointer"
       style={{
-        background:     "oklch(16% 0.028 255 / 0.55)",
+        background:     "var(--surface)",
         border:         `1px solid ${meta.color}22`,
         backdropFilter: "blur(12px)",
         opacity:        dimmed ? 0.45 : 1,
       }}
       onMouseEnter={e => {
         if (dimmed) return;
-        (e.currentTarget as HTMLDivElement).style.background    = "oklch(18% 0.032 255 / 0.75)";
+        (e.currentTarget as HTMLDivElement).style.background    = "var(--surface-2)";
         (e.currentTarget as HTMLDivElement).style.borderColor   = `${meta.color}55`;
       }}
       onMouseLeave={e => {
-        (e.currentTarget as HTMLDivElement).style.background    = "oklch(16% 0.028 255 / 0.55)";
+        (e.currentTarget as HTMLDivElement).style.background    = "var(--surface)";
         (e.currentTarget as HTMLDivElement).style.borderColor   = `${meta.color}22`;
       }}
     >
@@ -102,22 +102,22 @@ function ResultCard({ chunk, dimmed }: { chunk: MemoryChunk; dimmed?: boolean })
                 style={{ color: meta.color }}>
             {meta.label}
           </span>
-          <span className="text-[9px]" style={{ color: "oklch(38% 0.018 255)" }}>
+          <span className="text-[9px]" style={{ color: "var(--ink-2)" }}>
             {fmtDate(chunk.created_at)}
           </span>
         </div>
         <p className="text-sm leading-snug font-medium truncate"
-           style={{ color: "oklch(88% 0.012 255)" }}>
+           style={{ color: "var(--ink-0)" }}>
           {title}
         </p>
         {sub && (
-          <p className="text-[11px] mt-0.5" style={{ color: "oklch(46% 0.018 255)" }}>
+          <p className="text-[11px] mt-0.5" style={{ color: "var(--ink-2)" }}>
             {sub}
           </p>
         )}
         {!isTask && (
           <p className="text-[11px] mt-0.5 line-clamp-2"
-             style={{ color: "oklch(46% 0.018 255)" }}>
+             style={{ color: "var(--ink-2)" }}>
             {chunk.text}
           </p>
         )}
@@ -157,7 +157,7 @@ function AnswerPanel({
       <div
         className="rounded-[14px] px-5 py-4"
         style={{
-          background:     "oklch(16% 0.028 255 / 0.65)",
+          background:     "var(--surface)",
           border:         `1px solid ${COLOR}33`,
           borderTop:      `2px solid ${COLOR}`,
           backdropFilter: "blur(16px)",
@@ -169,14 +169,14 @@ function AnswerPanel({
             ✦ Answer
           </span>
           {streaming && (
-            <span className="text-[9px]" style={{ color: "oklch(50% 0.018 255)" }}>
+            <span className="text-[9px]" style={{ color: "var(--ink-2)" }}>
               generating…
             </span>
           )}
         </div>
         <div
           className="text-[13.5px] leading-relaxed whitespace-pre-wrap"
-          style={{ color: "oklch(84% 0.012 255)" }}
+          style={{ color: "var(--ink-0)" }}
         >
           {answer || (streaming ? <span className="opacity-40">…</span> : null)}
           {streaming && answer && (
@@ -192,7 +192,7 @@ function AnswerPanel({
       {sources.length > 0 && (
         <div>
           <p className="text-[9px] font-bold tracking-[0.12em] uppercase mb-2 px-1"
-             style={{ color: "oklch(40% 0.018 255)" }}>
+             style={{ color: "var(--ink-2)" }}>
             {sources.length} source{sources.length !== 1 ? "s" : ""} used
           </p>
           <div className="flex flex-col gap-2">
@@ -212,12 +212,12 @@ function EmptyState({
   if (hint) {
     return (
       <div className="text-center py-16 px-6 rounded-[14px] mx-auto max-w-lg"
-           style={{ background: "oklch(14% 0.024 255 / 0.6)", border: "1px solid oklch(25% 0.04 255)" }}>
+           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
         <p className="text-2xl mb-3">🧠</p>
-        <p className="text-sm font-medium mb-1" style={{ color: "oklch(80% 0.012 255)" }}>
+        <p className="text-sm font-medium mb-1" style={{ color: "var(--ink-0)" }}>
           Memory layer not yet enabled
         </p>
-        <p className="text-[12px] leading-relaxed" style={{ color: "oklch(46% 0.018 255)" }}>
+        <p className="text-[12px] leading-relaxed" style={{ color: "var(--ink-2)" }}>
           {hint}
         </p>
         <a
@@ -239,19 +239,19 @@ function EmptyState({
         <p className="text-[40px] mb-4 opacity-40">🧠</p>
         {mode === "ask" ? (
           <>
-            <p className="text-sm" style={{ color: "oklch(42% 0.018 255)" }}>
+            <p className="text-sm" style={{ color: "var(--ink-2)" }}>
               Ask anything — Claude will answer from your memories
             </p>
-            <p className="text-[11px] mt-2" style={{ color: "oklch(34% 0.018 255)" }}>
+            <p className="text-[11px] mt-2" style={{ color: "var(--ink-2)" }}>
               Press Enter or click Ask ✦
             </p>
           </>
         ) : (
           <>
-            <p className="text-sm" style={{ color: "oklch(42% 0.018 255)" }}>
+            <p className="text-sm" style={{ color: "var(--ink-2)" }}>
               Search your memories semantically
             </p>
-            <p className="text-[11px] mt-2" style={{ color: "oklch(34% 0.018 255)" }}>
+            <p className="text-[11px] mt-2" style={{ color: "var(--ink-2)" }}>
               Captures · Tasks · Habits · Meals · Goals
             </p>
           </>
@@ -263,7 +263,7 @@ function EmptyState({
   return (
     <div className="text-center py-20">
       <p className="text-[40px] mb-4 opacity-30">◌</p>
-      <p className="text-sm" style={{ color: "oklch(42% 0.018 255)" }}>
+      <p className="text-sm" style={{ color: "var(--ink-2)" }}>
         No matching memories found
       </p>
     </div>
@@ -483,7 +483,7 @@ export default function BrainPage() {
               className="px-3 py-1 rounded-[7px] text-[11px] font-semibold tracking-[0.06em] uppercase transition-all"
               style={{
                 background: mode === m ? `${ACCENT}20` : "transparent",
-                color:      mode === m ? ACCENT : "oklch(40% 0.018 255)",
+                color:      mode === m ? ACCENT : "var(--ink-2)",
                 border:     `1px solid ${mode === m ? `${ACCENT}40` : "transparent"}`,
               }}
             >
@@ -496,15 +496,15 @@ export default function BrainPage() {
         <div
           className="relative flex items-center rounded-[14px] overflow-hidden"
           style={{
-            background:     "oklch(16% 0.028 255 / 0.65)",
-            border:         `1px solid ${mode === "ask" ? `${ACCENT}40` : "oklch(28% 0.04 255)"}`,
+            background:     "var(--surface)",
+            border:         `1px solid ${mode === "ask" ? `${ACCENT}40` : "var(--border)"}`,
             backdropFilter: "blur(16px)",
             boxShadow:      mode === "ask" ? `0 0 0 1px ${ACCENT}12` : "none",
           }}
         >
           <span
             className="pl-4 pr-2 text-base select-none"
-            style={{ color: loading || streaming ? ACCENT : "oklch(38% 0.018 255)" }}
+            style={{ color: loading || streaming ? ACCENT : "var(--ink-2)" }}
           >
             {(loading || streaming)
               ? <span className="inline-block animate-spin">◌</span>
@@ -520,7 +520,7 @@ export default function BrainPage() {
             placeholder={isAsk ? "Ask a question about your memories…" : "Search your memories…"}
             spellCheck={false}
             className="flex-1 bg-transparent py-4 pr-4 text-[15px] font-medium outline-none placeholder:font-normal"
-            style={{ color: "oklch(88% 0.012 255)", caretColor: ACCENT }}
+            style={{ color: "var(--ink-0)", caretColor: ACCENT }}
           />
 
           {/* Ask button (visible in Ask mode only) */}
@@ -539,7 +539,7 @@ export default function BrainPage() {
             <button
               onClick={() => { clearAll(); inputRef.current?.focus(); }}
               className="pr-4 text-[18px] leading-none transition-opacity hover:opacity-60"
-              style={{ color: "oklch(44% 0.018 255)" }}
+              style={{ color: "var(--ink-2)" }}
               aria-label="Clear"
             >
               ×
@@ -550,17 +550,17 @@ export default function BrainPage() {
         {/* Status line */}
         <div className="mt-2 h-4 px-1">
           {isSearch && !loading && searched && !hint && chunks.length > 0 && (
-            <p className="text-[11px]" style={{ color: "oklch(38% 0.018 255)" }}>
+            <p className="text-[11px]" style={{ color: "var(--ink-2)" }}>
               {chunks.length} result{chunks.length !== 1 ? "s" : ""}
             </p>
           )}
           {isAsk && streaming && (
-            <p className="text-[11px]" style={{ color: "oklch(38% 0.018 255)" }}>
+            <p className="text-[11px]" style={{ color: "var(--ink-2)" }}>
               Claude is thinking…
             </p>
           )}
           {error && (
-            <p className="text-[11px]" style={{ color: "oklch(65% 0.18 20)" }}>
+            <p className="text-[11px]" style={{ color: "var(--danger)" }}>
               {error}
             </p>
           )}

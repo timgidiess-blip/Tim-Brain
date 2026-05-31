@@ -34,8 +34,8 @@ export default function TaskCard({ task, entity, onClick, showUrgency = false, d
       onClick={onClick}
       className="group relative rounded-[10px] p-[11px] cursor-pointer transition-all duration-100 select-none"
       style={{
-        background:   dragging ? "oklch(28% 0.030 255 / 0.95)" : "oklch(20% 0.022 255 / 0.75)",
-        border:       `1px solid ${dragging ? meta.border : "oklch(28% 0.030 255 / 0.55)"}`,
+        background:   dragging ? "var(--surface-2)" : "var(--surface)",
+        border:       `1px solid ${dragging ? meta.border : "var(--border)"}`,
         opacity:      dimmed ? 0.35 : 1,
         boxShadow:    dragging ? "0 12px 32px oklch(0% 0 0 / 0.5)" : undefined,
         backdropFilter: "blur(8px)",
@@ -80,7 +80,7 @@ export default function TaskCard({ task, entity, onClick, showUrgency = false, d
           <span
             key={tag}
             className="text-[10px] px-[6px] py-[2px] rounded-[4px]"
-            style={{ color: "var(--ink-2)", background: "oklch(28% 0.018 255 / 0.45)", border: "1px solid oklch(35% 0.018 255 / 0.35)" }}
+            style={{ color: "var(--ink-2)", background: "var(--surface-2)", border: "1px solid var(--border)" }}
           >
             #{tag}
           </span>

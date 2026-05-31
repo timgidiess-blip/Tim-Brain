@@ -56,8 +56,8 @@ function GoalRow({
         onClick={onToggle}
         className="shrink-0 mt-[1px] w-[15px] h-[15px] rounded-[4px] flex items-center justify-center transition-all"
         style={{
-          background:  item.done ? col : "oklch(22% 0.022 255 / 0.6)",
-          border:      `1.5px solid ${item.done ? col : "oklch(38% 0.022 255 / 0.6)"}`,
+          background:  item.done ? col : "var(--surface-2)",
+          border:      `1.5px solid ${item.done ? col : "var(--border-strong)"}`,
           color:       "#000",
           fontSize:    "9px",
           lineHeight:  "1",
@@ -155,7 +155,7 @@ function GoalSection({
 
       {/* Goal list */}
       {items.length === 0 && (
-        <p className="text-[11px] mb-[6px]" style={{ color: "oklch(38% 0.018 255)" }}>
+        <p className="text-[11px] mb-[6px]" style={{ color: "var(--ink-2)" }}>
           No goals yet — add one below.
         </p>
       )}
@@ -168,7 +168,7 @@ function GoalSection({
           />
         ))}
         {closed.length > 0 && open.length > 0 && (
-          <div className="my-[3px]" style={{ borderTop: "1px solid oklch(28% 0.022 255 / 0.35)" }} />
+          <div className="my-[3px]" style={{ borderTop: "1px solid var(--border)" }} />
         )}
         {closed.map(item => (
           <GoalRow key={item.id} item={item} scope={scope}
@@ -189,8 +189,8 @@ function GoalSection({
           onChange={e => setInput(e.target.value)}
           className="flex-1 rounded-[6px] px-[8px] py-[5px] text-[11px] outline-none"
           style={{
-            background: "oklch(18% 0.022 255 / 0.55)",
-            border:     `1px solid oklch(30% 0.022 255 / 0.50)`,
+            background: "var(--surface-2)",
+            border:     `1px solid var(--border)`,
             color:      "var(--ink-0)",
           }}
           placeholder="Add a goal…"
@@ -201,9 +201,9 @@ function GoalSection({
           disabled={!input.trim()}
           className="shrink-0 w-[26px] h-[26px] rounded-[6px] flex items-center justify-center text-[14px] font-bold leading-none transition-all"
           style={{
-            background: !input.trim() ? "oklch(20% 0.022 255 / 0.5)" : col,
-            color:      !input.trim() ? "oklch(38% 0.018 255)"       : "#000",
-            border:     `1px solid ${!input.trim() ? "oklch(30% 0.022 255 / 0.45)" : col}`,
+            background: !input.trim() ? "var(--surface-2)" : col,
+            color:      !input.trim() ? "var(--ink-2)"      : "#000",
+            border:     `1px solid ${!input.trim() ? "var(--border)" : col}`,
           }}
           aria-label="Add goal"
         >
@@ -281,7 +281,7 @@ export default function GoalsCard() {
       {/* Divider */}
       <div
         className="my-[14px]"
-        style={{ borderTop: "1px solid oklch(28% 0.030 255 / 0.55)" }}
+        style={{ borderTop: "1px solid var(--border)" }}
       />
 
       {/* Month section */}

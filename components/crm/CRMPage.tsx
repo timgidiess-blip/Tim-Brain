@@ -147,12 +147,12 @@ export default function CRMPage() {
       {/* Top bar */}
       <div
         className="flex items-center gap-3 mb-4 pb-4"
-        style={{ borderBottom: "1px solid oklch(28% 0.030 255 / 0.45)" }}
+        style={{ borderBottom: "1px solid var(--border)" }}
       >
         {/* View tabs */}
         <div
           className="flex items-center gap-[3px] p-[3px] rounded-[10px]"
-          style={{ background: "oklch(18% 0.022 255 / 0.7)", border: "1px solid oklch(28% 0.030 255 / 0.45)" }}
+          style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}
         >
           {VIEWS.map(({ id, label }) => (
             <button
@@ -161,7 +161,7 @@ export default function CRMPage() {
               className="px-3 py-[5px] rounded-[7px] text-[12px] font-medium transition-all"
               style={
                 view === id
-                  ? { background: "oklch(25% 0.030 255 / 0.9)", color: "var(--ink-0)", border: "1px solid oklch(35% 0.030 255 / 0.55)" }
+                  ? { background: "var(--surface)", color: "var(--ink-0)", border: "1px solid var(--border-strong)" }
                   : { background: "transparent", color: "var(--ink-2)", border: "1px solid transparent" }
               }
             >

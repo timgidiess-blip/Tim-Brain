@@ -35,7 +35,7 @@ const PRIORITIES: Priority[] = [
   {
     num: "04", title: "Newsletter — May edition draft",
     tag: "Comms", due: "Due: 31 May", barPct: 18,
-    accentColor: "oklch(42% 0.018 255)",
+    accentColor: "var(--ink-2)",
     tagBg: "oklch(72% 0.19 145 / 0.14)", tagColor: "oklch(72% 0.19 145)",
   },
 ];
@@ -51,8 +51,8 @@ export default function PrioritiesCard() {
             key={p.num}
             className="flex items-start gap-[10px] px-3 py-[10px] rounded-[10px] relative overflow-hidden"
             style={{
-              background: "oklch(19% 0.024 255 / 0.55)",
-              border: "1px solid oklch(28% 0.030 255 / 0.55)",
+              background: "var(--surface-2)",
+              border: "1px solid var(--border)",
             }}
           >
             {/* Left colour bar */}
@@ -63,7 +63,7 @@ export default function PrioritiesCard() {
 
             <span
               className="text-[10px] font-bold font-mono mt-[2px] shrink-0"
-              style={{ color: "oklch(42% 0.018 255)" }}
+              style={{ color: "var(--ink-2)" }}
             >
               {p.num}
             </span>
@@ -78,14 +78,14 @@ export default function PrioritiesCard() {
                 </span>
                 <span
                   className="text-[9px] font-mono"
-                  style={{ color: "oklch(42% 0.018 255)" }}
+                  style={{ color: "var(--ink-2)" }}
                 >
                   {p.due}
                 </span>
               </div>
               <div
                 className="h-[3px] rounded-[2px] mt-[7px]"
-                style={{ background: "oklch(20% 0.025 255 / 0.8)" }}
+                style={{ background: "var(--surface-2)" }}
               >
                 <div
                   className="h-full rounded-[2px]"
