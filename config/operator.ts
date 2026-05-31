@@ -5,8 +5,8 @@ export const operator = {
   name:     "Timothy Gidiess",
   initials: "TG",
   role:     "Founder & CEO",
-  location: "Lagos, Nigeria",
-  timezone: "WAT · UTC+1",
+  location: "Sydney, Australia",
+  timezone: "AEST · UTC+10",
 
   // What you're locked in on right now.
   focus: "Tim's Brain — capture pipeline & dashboard",
