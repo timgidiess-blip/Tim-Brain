@@ -1,11 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import OpenAI, { toFile } from "openai";
-import {
-  classifyCapture,
-  type Classification,
-} from "@/lib/router/classifyCapture";
+import { processCapture } from "@/lib/pipeline/processCapture";
 
 // ── Telegram types ────────────────────────────────────────────────────────────
 
@@ -22,19 +17,6 @@ interface TgMessage {
 interface TgUpdate { update_id: number; message?: TgMessage }
 interface TgFileResult { file_path: string }
 interface TgResponse<T> { ok: boolean; result?: T }
-
-// ── Supabase ──────────────────────────────────────────────────────────────────
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type DB = SupabaseClient<any>;
-
-function getDb(): DB {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("Supabase env vars missing");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return createClient<any>(url, key);
-}
 
 // ── Telegram helpers ──────────────────────────────────────────────────────────
 
@@ -94,19 +76,15 @@ function urgencyKeyboard(captureId: string): object {
   };
 }
 
-// ── OpenAI helpers ────────────────────────────────────────────────────────────
-
-function getOpenAI(): OpenAI {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error("OPENAI_API_KEY missing");
-  return new OpenAI({ apiKey });
-}
+// ── OpenAI voice transcription ────────────────────────────────────────────────
 
 async function transcribeVoice(
   buffer: Buffer,
   mimeType = "audio/ogg",
 ): Promise<string> {
-  const openai = getOpenAI();
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) throw new Error("OPENAI_API_KEY missing");
+  const openai = new OpenAI({ apiKey });
   const ext    = mimeType.includes("ogg") ? "ogg" : mimeType.split("/")[1] ?? "mp3";
   const file   = await toFile(buffer, `voice.${ext}`, { type: mimeType });
   const result = await openai.audio.transcriptions.create({
@@ -114,106 +92,6 @@ async function transcribeVoice(
     file,
   });
   return result.text.trim();
-}
-
-async function embedText(text: string): Promise<number[]> {
-  const openai = getOpenAI();
-  const res    = await openai.embeddings.create({
-    model: "text-embedding-3-small",
-    input: text,
-  });
-  const embedding = res.data[0]?.embedding;
-  if (!embedding) throw new Error("No embedding returned");
-  return embedding;
-}
-
-// ── Downstream routing ────────────────────────────────────────────────────────
-
-async function routeDownstream(
-  db:         DB,
-  classified: Classification,
-  captureId:  string,
-  userId:     string,
-  rawText:    string,
-): Promise<{ table: string; id: string } | null> {
-  const { kind, urgency, tags, summary, entity_id } = classified;
-
-  // tasks and reminders → tasks table
-  if (kind === "task" || kind === "reminder") {
-    const { data, error } = await db
-      .from("tasks")
-      .insert({
-        user_id:     userId,
-        title:       summary,
-        description: rawText,
-        urgency,
-        key:         kind === "reminder" || urgency === "today",
-        tags,
-        entity_id:   entity_id ?? null,
-      })
-      .select("id")
-      .single();
-
-    if (error || !data) {
-      console.error("[route] tasks insert:", error?.message);
-      return null;
-    }
-    return { table: "tasks", id: data.id as string };
-  }
-
-  // notes and decisions → today's daily_log (notes JSON array)
-  if (kind === "note" || kind === "decision") {
-    const today = new Date().toISOString().slice(0, 10);
-    const entry = {
-      id:         captureId,
-      kind,
-      summary,
-      tags,
-      created_at: new Date().toISOString(),
-    };
-
-    const { data: existing } = await db
-      .from("daily_logs")
-      .select("id, notes")
-      .eq("user_id", userId)
-      .eq("log_date", today)
-      .maybeSingle();
-
-    if (existing) {
-      let captures: unknown[] = [];
-      try {
-        const parsed = JSON.parse((existing.notes as string | null) ?? "{}") as Record<string, unknown>;
-        if (Array.isArray(parsed["captures"])) captures = parsed["captures"] as unknown[];
-      } catch { /* leave as empty */ }
-      captures.push(entry);
-
-      await db
-        .from("daily_logs")
-        .update({ notes: JSON.stringify({ captures }) })
-        .eq("id", existing.id as string);
-
-      return { table: "daily_logs", id: existing.id as string };
-    }
-
-    const { data: newLog, error } = await db
-      .from("daily_logs")
-      .insert({
-        user_id:  userId,
-        log_date: today,
-        notes:    JSON.stringify({ captures: [entry] }),
-      })
-      .select("id")
-      .single();
-
-    if (error || !newLog) {
-      console.error("[route] daily_logs insert:", error?.message);
-      return null;
-    }
-    return { table: "daily_logs", id: newLog.id as string };
-  }
-
-  // habit and other kinds stay in raw_captures only
-  return null;
 }
 
 // ── Reply formatting ──────────────────────────────────────────────────────────
@@ -238,20 +116,23 @@ function esc(s: string): string {
 }
 
 function buildReply(
-  classified: Classification,
-  source: string,
+  kind:      string,
+  urgency:   string,
+  tags:      string[],
+  summary:   string,
+  llmSource: string,
 ): string {
-  const kindEmoji    = KIND_EMOJI[classified.kind] ?? "📌";
-  const urgencyLabel = URGENCY_LABEL[classified.urgency] ?? classified.urgency;
-  const tagsLine     = classified.tags.length > 0
-    ? `\n🏷 ${esc(classified.tags.map(t => `#${t}`).join(" "))}`
+  const kindEmoji    = KIND_EMOJI[kind] ?? "📌";
+  const urgencyLabel = URGENCY_LABEL[urgency] ?? urgency;
+  const tagsLine     = tags.length > 0
+    ? `\n🏷 ${esc(tags.map(t => `#${t}`).join(" "))}`
     : "";
 
   return (
-    `✅ <b>Captured</b> · <code>${esc(source)}</code>\n` +
-    `${kindEmoji} <b>${esc(classified.kind)}</b>  ·  ${urgencyLabel} (AI)` +
+    `✅ <b>Captured</b> · <code>${esc(llmSource)}</code>\n` +
+    `${kindEmoji} <b>${esc(kind)}</b>  ·  ${urgencyLabel} (AI)` +
     tagsLine +
-    `\n\n<i>${esc(classified.summary)}</i>\n\n` +
+    `\n\n<i>${esc(summary)}</i>\n\n` +
     `Override urgency ↓`
   );
 }
@@ -275,7 +156,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   const message = update.message;
-  if (!message) return NextResponse.json({ ok: true }); // e.g. edited_message, callback_query
+  if (!message) return NextResponse.json({ ok: true }); // e.g. callback_query
 
   const chatId = message.chat.id;
 
@@ -309,75 +190,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ ok: true });
     }
 
-    // 4. Classify
-    const { source, ...classified } = await classifyCapture(rawText);
-
-    const db = getDb();
-
-    // 5. Write raw_capture
-    const { data: capture, error: captureErr } = await db
-      .from("raw_captures")
-      .insert({
-        user_id:        userId,
-        source:         "telegram",
-        raw_text:       rawText,
-        audio_url:      audioUrl,
-        classification: classified,
-        llm_source:     source,
-        routed_to:      null,
-        routed_id:      null,
-      })
-      .select("id")
-      .single();
-
-    if (captureErr || !capture) {
-      throw new Error(`raw_captures insert failed: ${captureErr?.message ?? "no data"}`);
-    }
-    const captureId = capture.id as string;
-
-    // 6. Route to downstream table
-    const routed = await routeDownstream(db, classified, captureId, userId, rawText);
-    if (routed) {
-      await db
-        .from("raw_captures")
-        .update({ routed_to: routed.table, routed_id: routed.id })
-        .eq("id", captureId);
-    }
-
-    // 7. Embed + write memory_chunk (non-fatal — embedding API may not be set up yet)
-    try {
-      const embedding = await embedText(rawText);
-      await db.from("memory_chunks").insert({
-        user_id:     userId,
-        source_type: "raw_capture",
-        source_id:   captureId,
-        text:        rawText,
-        embedding,
-      });
-    } catch (e) {
-      console.warn("[webhook] Embedding skipped:", (e as Error).message);
-    }
-
-    // 8. Audit log
-    await db.from("audit_log").insert({
-      user_id:       userId,
-      action:        "capture_created",
-      resource_type: "raw_captures",
-      resource_id:   captureId,
-      metadata: {
-        kind:       classified.kind,
-        urgency:    classified.urgency,
-        llm_source: source,
-        routed_to:  routed?.table ?? null,
-        routed_id:  routed?.id   ?? null,
-      },
+    // 4–8. Shared pipeline (classify → write → route → embed → audit)
+    const result = await processCapture({
+      rawText,
+      userId,
+      source: "telegram",
+      audioUrl,
     });
 
     // 9. Reply with confirmation + urgency override keyboard
     await tgSend(
       chatId,
-      buildReply(classified, source),
-      urgencyKeyboard(captureId),
+      buildReply(result.kind, result.urgency, result.tags, result.summary, result.llmSource),
+      urgencyKeyboard(result.captureId),
     );
 
     return NextResponse.json({ ok: true });

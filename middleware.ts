@@ -40,6 +40,16 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   const dashPassword = process.env.DASHBOARD_PASSWORD ?? "";
   const isApiRoute = pathname.startsWith("/api/");
 
+  // ── Authorization: Bearer CRON_SECRET — Vercel cron jobs ────────────────────
+  // Vercel automatically attaches this header when CRON_SECRET is set in the
+  // project environment.  Check it before the cookie path so cron invocations
+  // never hit the browser-redirect logic.
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret) {
+    const authHeader = req.headers.get("authorization");
+    if (authHeader === `Bearer ${cronSecret}`) return NextResponse.next();
+  }
+
   // ── x-api-secret: programmatic access (CLI, cron, server-to-server) ────────
   // Header presence triggers this branch exclusively — we don't fall through
   // to the cookie check so an invalid header always yields a hard 401.

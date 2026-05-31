@@ -9,3 +9,5 @@ export { default as SessionCard } from "./SessionCard";
 export { default as HabitTrackerCard } from "./HabitTrackerCard";
 export { default as PrioritiesCard } from "./PrioritiesCard";
 export { default as NutritionCard } from "./NutritionCard";
+export { default as CaptureBox } from "./CaptureBox";
+export { default as CalendarCard } from "./CalendarCard";

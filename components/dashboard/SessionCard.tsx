@@ -1,115 +1,190 @@
+import Link from "next/link";
 import Panel, { CardHeader } from "./Panel";
+import { getDb } from "@/lib/supabase";
 
 const ACCENT = "var(--col-session)";
-const COL = "oklch(72% 0.22 290)";
 
-const STATS = [
-  { val: "41",   lbl: "Turns" },
-  { val: "4.1k", lbl: "Tokens" },
-  { val: "14",   lbl: "Tools" },
-  { val: "83%",  lbl: "Cache" },
-] as const;
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-const TOOLS = [
-  "Bash", "Read", "Edit", "Write", "WebSearch",
-  "Agent", "mcp__chrome", "mcp__preview", "TaskCreate",
-] as const;
+interface Task {
+  id:                string;
+  title:             string;
+  urgency:           string | null;
+  key:               boolean;
+  priority_score:    number | null;
+  time_estimate_min: number | null;
+}
 
-export default function SessionCard() {
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fmtTime(min: number | null): string {
+  if (!min || min <= 0) return "";
+  if (min < 60) return `${min}m`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
+const URGENCY_CHIP: Record<string, { label: string; color: string; bg: string }> = {
+  today:      { label: "Today",     color: "var(--danger)", bg: "oklch(68% 0.22 25 / 0.12)"  },
+  this_week:  { label: "This Week", color: "var(--warn)",   bg: "oklch(80% 0.18 78 / 0.12)"  },
+  this_month: { label: "Month",     color: "var(--col-habits)", bg: "oklch(70% 0.19 225 / 0.12)" },
+  someday:    { label: "Someday",   color: "var(--ink-2)",  bg: "oklch(28% 0.018 255 / 0.35)" },
+};
+
+// ── Data fetching ─────────────────────────────────────────────────────────────
+
+async function getTopTasks(): Promise<Task[]> {
+  const userId = process.env.TELEGRAM_USER_ID;
+  if (!userId) return [];
+
+  try {
+    const db = getDb();
+    const { data, error } = await db
+      .from("tasks")
+      .select("id, title, urgency, key, priority_score, time_estimate_min")
+      .eq("user_id", userId)
+      .is("completed_at", null)
+      .or("urgency.eq.today,key.eq.true")
+      .order("priority_score", { ascending: false, nullsFirst: false })
+      .order("created_at",     { ascending: false })
+      .limit(3);
+
+    if (error) {
+      console.error("[SessionCard] Supabase error:", error.message);
+      return [];
+    }
+
+    return (data ?? []) as Task[];
+  } catch (e) {
+    console.error("[SessionCard] fetch failed:", e);
+    return [];
+  }
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+export default async function SessionCard() {
+  const tasks = await getTopTasks();
+
   return (
     <Panel accent={ACCENT}>
-      <CardHeader title="Session" badge="LIVE" />
+      <CardHeader title="Session" badge={tasks.length > 0 ? `${tasks.length} active` : "TODAY"} />
 
-      {/* Model row */}
+      {/* Section label */}
       <div
-        className="flex items-center gap-[10px] mb-[14px] pb-[13px]"
-        style={{ borderBottom: "1px solid oklch(28% 0.030 255 / 0.55)" }}
+        className="text-[10px] font-bold tracking-[0.10em] uppercase mb-3"
+        style={{ color: "var(--ink-2)" }}
       >
-        <div
-          className="w-[36px] h-[36px] rounded-[10px] shrink-0 flex items-center justify-center text-[17px]"
-          style={{
-            background: "linear-gradient(135deg, oklch(72% 0.22 290 / 0.28), oklch(72% 0.19 195 / 0.28))",
-            border: "1px solid oklch(72% 0.22 290 / 0.30)",
-          }}
-        >
-          ◈
+        Today &amp; Key — Top {tasks.length > 0 ? tasks.length : 0}
+      </div>
+
+      {/* Task list */}
+      {tasks.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <div className="flex flex-col gap-[8px]">
+          {tasks.map((task, i) => (
+            <TaskRow key={task.id} task={task} rank={i + 1} />
+          ))}
         </div>
-        <div>
-          <div className="text-[13px] font-semibold mb-[2px]">Claude Sonnet 4.6</div>
-          <div className="text-[10px] font-mono" style={{ color: "oklch(42% 0.018 255)" }}>
-            claude-sonnet-4-6 · Extended Thinking ON
-          </div>
-        </div>
-        <span
-          className="ml-auto text-[9px] font-extrabold px-2 py-[3px] rounded-[20px] tracking-[0.08em] border"
-          style={{
-            background: "oklch(72% 0.22 290 / 0.10)",
-            color: COL,
-            borderColor: "oklch(72% 0.22 290 / 0.30)",
-          }}
-        >
-          ACTIVE
-        </span>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-2 mb-[13px]">
-        {STATS.map((s) => (
-          <div key={s.lbl} className="text-center">
-            <div className="text-[19px] font-bold font-mono leading-none" style={{ color: COL }}>
-              {s.val}
-            </div>
-            <div
-              className="text-[9px] tracking-[0.08em] uppercase mt-[3px]"
-              style={{ color: "oklch(42% 0.018 255)" }}
-            >
-              {s.lbl}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Context bar */}
-      <div className="flex justify-between mb-[5px]">
-        <span className="text-[10px]" style={{ color: "oklch(42% 0.018 255)" }}>
-          Context window used
-        </span>
-        <span className="text-[10px] font-mono" style={{ color: COL }}>
-          37% · 74k / 200k tokens
-        </span>
-      </div>
-      <div
-        className="h-1.5 rounded-[3px] overflow-hidden mb-[13px]"
-        style={{ background: "oklch(20% 0.025 255 / 0.7)" }}
-      >
-        <div
-          className="h-full w-[37%] rounded-[3px]"
-          style={{ background: `linear-gradient(90deg, ${COL}, var(--col-operator))` }}
-        />
-      </div>
-
-      {/* Active tools */}
-      <div
-        className="text-[10px] font-bold tracking-[0.12em] uppercase mb-[7px]"
-        style={{ color: "oklch(42% 0.018 255)" }}
-      >
-        Active Tools
-      </div>
-      <div className="flex flex-wrap gap-[5px]">
-        {TOOLS.map((t) => (
-          <span
-            key={t}
-            className="text-[9px] px-[7px] py-[2px] rounded-[5px] font-mono"
-            style={{
-              background: "oklch(20% 0.025 255 / 0.7)",
-              border: "1px solid oklch(28% 0.030 255 / 0.55)",
-              color: "oklch(42% 0.018 255)",
-            }}
-          >
-            {t}
-          </span>
-        ))}
-      </div>
+      )}
     </Panel>
+  );
+}
+
+// ── TaskRow ───────────────────────────────────────────────────────────────────
+
+function TaskRow({ task, rank }: { task: Task; rank: number }) {
+  const chip    = URGENCY_CHIP[task.urgency ?? "someday"] ?? URGENCY_CHIP["someday"]!;
+  const timeStr = fmtTime(task.time_estimate_min);
+
+  return (
+    <Link
+      href={`/tasks/${task.id}`}
+      className="group flex items-start gap-3 rounded-[9px] px-3 py-[10px] transition-colors"
+      style={{
+        background: "oklch(20% 0.025 255 / 0.50)",
+        border:     "1px solid oklch(28% 0.030 255 / 0.55)",
+      }}
+      // hover via CSS var injection — Tailwind group-hover for bg
+    >
+      {/* Rank number */}
+      <span
+        className="text-[11px] font-bold font-mono shrink-0 mt-[1px] w-4 text-right leading-tight"
+        style={{ color: "var(--col-session)" }}
+      >
+        {rank}
+      </span>
+
+      {/* Title + chips */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start gap-1.5 flex-wrap">
+          {task.key && (
+            <span className="text-[10px] select-none" title="Key task">🔑</span>
+          )}
+          <span
+            className="text-[12px] leading-snug font-medium group-hover:opacity-80 transition-opacity"
+            style={{ color: "var(--ink-0)" }}
+          >
+            {task.title}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 mt-[5px] flex-wrap">
+          {/* Urgency chip */}
+          <span
+            className="text-[9px] font-semibold px-[6px] py-[2px] rounded-[4px]"
+            style={{ color: chip.color, background: chip.bg }}
+          >
+            {chip.label}
+          </span>
+
+          {/* Time estimate */}
+          {timeStr && (
+            <span
+              className="text-[9px] font-mono px-[6px] py-[2px] rounded-[4px]"
+              style={{
+                color:      "var(--ink-2)",
+                background: "oklch(28% 0.018 255 / 0.40)",
+              }}
+            >
+              ⏱ {timeStr}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Arrow */}
+      <span
+        className="text-[14px] shrink-0 mt-[1px] opacity-30 group-hover:opacity-80 transition-opacity"
+        style={{ color: ACCENT }}
+      >
+        →
+      </span>
+    </Link>
+  );
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+function EmptyState() {
+  return (
+    <div
+      className="rounded-[9px] px-4 py-5 text-center"
+      style={{
+        background: "oklch(20% 0.025 255 / 0.40)",
+        border:     "1px solid oklch(28% 0.030 255 / 0.55)",
+      }}
+    >
+      <div className="text-[22px] mb-2 select-none">✅</div>
+      <div className="text-[12px] font-medium mb-1" style={{ color: "var(--ink-1)" }}>
+        Clear for today
+      </div>
+      <div className="text-[10px]" style={{ color: "var(--ink-2)" }}>
+        No tasks flagged today or marked key.<br />
+        Capture one below or via Telegram.
+      </div>
+    </div>
   );
 }

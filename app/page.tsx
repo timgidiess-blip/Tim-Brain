@@ -7,6 +7,9 @@ import SessionCard from "@/components/dashboard/SessionCard";
 import HabitTrackerCard from "@/components/dashboard/HabitTrackerCard";
 import PrioritiesCard from "@/components/dashboard/PrioritiesCard";
 import NutritionCard from "@/components/dashboard/NutritionCard";
+import CalendarCard from "@/components/dashboard/CalendarCard";
+import GoalsCard from "@/components/dashboard/GoalsCard";
+import CaptureBox from "@/components/dashboard/CaptureBox";
 
 export default function Home() {
   return (
@@ -21,6 +24,7 @@ export default function Home() {
           <OperatorCard />
           <FinancePulseCard />
           <KeyBlockersCard />
+          <GoalsCard />
         </div>
 
         {/* Centre column */}
@@ -33,8 +37,11 @@ export default function Home() {
         {/* Right column */}
         <div className="flex flex-col gap-[14px]">
           <NutritionCard />
+          <CalendarCard />
         </div>
       </div>
+
+      <CaptureBox />
     </Shell>
   );
 }

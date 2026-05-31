@@ -28,6 +28,7 @@
   --col-habits:     oklch(70% 0.19 225);
   --col-priorities: oklch(80% 0.19  78);
   --col-nutrition:  oklch(72% 0.19 158);
+  --col-calendar:   oklch(72% 0.20 270);  /* indigo — distinct from session violet */
 }
 
 /* ── Tailwind v4: expose tokens as colour utilities ──────────────────
@@ -55,6 +56,7 @@
   --color-habits:     var(--col-habits);
   --color-priorities: var(--col-priorities);
   --color-nutrition:  var(--col-nutrition);
+  --color-calendar:   var(--col-calendar);
 
   --animate-pulse-dot: pulse-dot 2.2s ease-in-out infinite;
 }
@@ -62,6 +64,16 @@
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; }
   55%       { opacity: 0.3; }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0)   scale(1);    }
+  to   { opacity: 0; transform: translateY(8px) scale(0.97); }
 }
 
 /* ── Base ─────────────────────────────────────────────────────────── */
