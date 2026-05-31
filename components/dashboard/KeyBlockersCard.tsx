@@ -56,8 +56,8 @@ export default function KeyBlockersCard() {
               key={b.title}
               className="flex items-start gap-[9px] rounded-[9px] px-[10px] py-[9px]"
               style={{
-                background: "oklch(20% 0.025 255 / 0.45)",
-                border: "1px solid oklch(28% 0.030 255 / 0.55)",
+                background: "var(--surface-2)",
+                border: "1px solid var(--border)",
               }}
             >
               <span
@@ -68,7 +68,7 @@ export default function KeyBlockersCard() {
               </span>
               <div
                 className="text-[11px] leading-[1.45]"
-                style={{ color: "oklch(62% 0.018 255)" }}
+                style={{ color: "var(--ink-2)" }}
               >
                 <strong
                   className="block font-semibold text-[12px] mb-[2px]"

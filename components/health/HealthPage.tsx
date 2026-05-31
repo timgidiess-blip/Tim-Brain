@@ -38,21 +38,21 @@ function StatCard({ label, value, sub, color }: {
     <div
       className="flex flex-col gap-[3px] px-5 py-4 rounded-[12px]"
       style={{
-        background:   "oklch(16% 0.028 255 / 0.55)",
+        background:   "var(--surface)",
         border:       `1px solid ${color}33`,
         borderTop:    `2px solid ${color}`,
         backdropFilter: "blur(12px)",
       }}
     >
       <span className="text-[9px] font-bold tracking-[0.12em] uppercase"
-            style={{ color: "oklch(42% 0.018 255)" }}>
+            style={{ color: "var(--ink-2)" }}>
         {label}
       </span>
       <span className="text-[22px] font-bold font-mono leading-none" style={{ color }}>
         {value}
       </span>
       {sub && (
-        <span className="text-[10px]" style={{ color: "oklch(55% 0.018 255)" }}>{sub}</span>
+        <span className="text-[10px]" style={{ color: "var(--ink-2)" }}>{sub}</span>
       )}
     </div>
   );
@@ -66,8 +66,8 @@ function MealRows({ meals }: { meals: Meal[] }) {
       <td colSpan={7} className="p-0">
         <div
           style={{
-            background:   "oklch(13% 0.022 255 / 0.6)",
-            borderBottom: "1px solid oklch(28% 0.025 255 / 0.45)",
+            background:   "var(--surface-2)",
+            borderBottom: "1px solid var(--border)",
           }}
         >
           {/* Sub-header */}
@@ -75,8 +75,8 @@ function MealRows({ meals }: { meals: Meal[] }) {
             className="grid text-[9px] font-bold tracking-[0.10em] uppercase px-5 py-[6px]"
             style={{
               gridTemplateColumns: "50px 1fr 80px 72px 72px 72px",
-              color: "oklch(40% 0.018 255)",
-              borderBottom: "1px solid oklch(25% 0.025 255 / 0.4)",
+              color: "var(--ink-2)",
+              borderBottom: "1px solid var(--border)",
             }}
           >
             <span>Time</span>
@@ -94,10 +94,10 @@ function MealRows({ meals }: { meals: Meal[] }) {
               className="grid items-center px-5 py-[7px]"
               style={{
                 gridTemplateColumns: "50px 1fr 80px 72px 72px 72px",
-                borderBottom: "1px solid oklch(22% 0.022 255 / 0.5)",
+                borderBottom: "1px solid var(--border)",
               }}
             >
-              <span className="text-[11px] font-mono" style={{ color: "oklch(45% 0.018 255)" }}>
+              <span className="text-[11px] font-mono" style={{ color: "var(--ink-2)" }}>
                 {m.t}
               </span>
               <span className="text-[12px] truncate pr-3" style={{ color: "var(--ink-1)" }}>
@@ -193,7 +193,7 @@ export default function HealthPage() {
         {/* Window selector */}
         <div
           className="flex gap-[3px] p-[3px] rounded-[9px]"
-          style={{ background: "oklch(18% 0.022 255 / 0.7)", border: "1px solid oklch(28% 0.030 255 / 0.45)" }}
+          style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}
         >
           {([30, 60, 90] as WindowDays[]).map(d => (
             <button
@@ -202,7 +202,7 @@ export default function HealthPage() {
               className="px-[12px] py-[5px] rounded-[6px] text-[12px] font-medium transition-all"
               style={
                 window === d
-                  ? { background: "oklch(25% 0.030 255 / 0.9)", color: "var(--ink-0)", border: `1px solid ${COL_KCAL}44` }
+                  ? { background: "var(--surface)", color: "var(--ink-0)", border: `1px solid ${COL_KCAL}44` }
                   : { background: "transparent", color: "var(--ink-2)", border: "1px solid transparent" }
               }
             >
@@ -240,8 +240,8 @@ export default function HealthPage() {
         <div
           className="rounded-[14px] overflow-hidden"
           style={{
-            background:   "oklch(16% 0.028 255 / 0.55)",
-            border:       "1px solid oklch(28% 0.030 255 / 0.55)",
+            background:   "var(--surface)",
+            border:       "1px solid var(--border)",
             backdropFilter: "blur(18px)",
           }}
         >
@@ -250,8 +250,8 @@ export default function HealthPage() {
             <thead>
               <tr
                 style={{
-                  background:   "oklch(20% 0.028 255 / 0.85)",
-                  borderBottom: "1px solid oklch(30% 0.025 255 / 0.55)",
+                  background:   "var(--surface-2)",
+                  borderBottom: "1px solid var(--border)",
                 }}
               >
                 {[
@@ -267,7 +267,7 @@ export default function HealthPage() {
                     key={col.label}
                     className="text-[9px] font-bold tracking-[0.10em] uppercase px-4 py-[11px]"
                     style={{
-                      color:     "oklch(45% 0.018 255)",
+                      color:     "var(--ink-2)",
                       width:     col.w,
                       textAlign: col.align as React.CSSProperties["textAlign"],
                     }}
@@ -293,16 +293,16 @@ export default function HealthPage() {
                       style={{
                         borderBottom: isLast && !isOpen
                           ? "none"
-                          : `1px solid oklch(${isOpen ? "30% 0.025 255 / 0.60" : "24% 0.022 255 / 0.45"})`,
+                          : "1px solid var(--border)",
                         background:   isOpen
-                          ? "oklch(20% 0.025 255 / 0.80)"
+                          ? "var(--surface-2)"
                           : "transparent",
                         cursor:       hasData ? "pointer" : "default",
                         transition:   "background 0.1s ease",
                       }}
                       onMouseEnter={e => {
                         if (hasData && !isOpen)
-                          (e.currentTarget as HTMLElement).style.background = "oklch(19% 0.025 255 / 0.6)";
+                          (e.currentTarget as HTMLElement).style.background = "var(--surface-2)";
                       }}
                       onMouseLeave={e => {
                         if (!isOpen)
@@ -319,7 +319,7 @@ export default function HealthPage() {
                             {primary}
                           </span>
                           {secondary && (
-                            <span className="text-[10px]" style={{ color: "oklch(42% 0.018 255)" }}>
+                            <span className="text-[10px]" style={{ color: "var(--ink-2)" }}>
                               {secondary}
                             </span>
                           )}
@@ -330,7 +330,7 @@ export default function HealthPage() {
                       <td className="px-4 py-[11px] text-right">
                         <span
                           className="text-[13px] font-mono font-semibold"
-                          style={{ color: hasData ? COL_KCAL : "oklch(32% 0.018 255)" }}
+                          style={{ color: hasData ? COL_KCAL : "var(--ink-2)" }}
                         >
                           {fmtKcal(day.totals.kcal)}
                         </span>
@@ -339,7 +339,7 @@ export default function HealthPage() {
                       {/* Protein */}
                       <td className="px-4 py-[11px] text-right">
                         <span className="text-[13px] font-mono"
-                              style={{ color: hasData ? COL_PROTEIN : "oklch(32% 0.018 255)" }}>
+                              style={{ color: hasData ? COL_PROTEIN : "var(--ink-2)" }}>
                           {fmtMacro(day.totals.p)}
                         </span>
                       </td>
@@ -347,7 +347,7 @@ export default function HealthPage() {
                       {/* Carbs */}
                       <td className="px-4 py-[11px] text-right">
                         <span className="text-[13px] font-mono"
-                              style={{ color: hasData ? COL_CARBS : "oklch(32% 0.018 255)" }}>
+                              style={{ color: hasData ? COL_CARBS : "var(--ink-2)" }}>
                           {fmtMacro(day.totals.c)}
                         </span>
                       </td>
@@ -355,7 +355,7 @@ export default function HealthPage() {
                       {/* Fat */}
                       <td className="px-4 py-[11px] text-right">
                         <span className="text-[13px] font-mono"
-                              style={{ color: hasData ? COL_FAT : "oklch(32% 0.018 255)" }}>
+                              style={{ color: hasData ? COL_FAT : "var(--ink-2)" }}>
                           {fmtMacro(day.totals.f)}
                         </span>
                       </td>
@@ -374,7 +374,7 @@ export default function HealthPage() {
                             {day.meals.length}
                           </span>
                         ) : (
-                          <span className="text-[11px]" style={{ color: "oklch(32% 0.018 255)" }}>0</span>
+                          <span className="text-[11px]" style={{ color: "var(--ink-2)" }}>0</span>
                         )}
                       </td>
 
@@ -410,7 +410,7 @@ export default function HealthPage() {
             <div className="text-center py-16" style={{ color: "var(--ink-2)" }}>
               <div className="text-[28px] mb-2">🥗</div>
               <div className="text-[13px]">No meals logged in the past {window} days.</div>
-              <div className="text-[11px] mt-1" style={{ color: "oklch(40% 0.018 255)" }}>
+              <div className="text-[11px] mt-1" style={{ color: "var(--ink-2)" }}>
                 Use the Nutrition card on the home dashboard to log meals.
               </div>
             </div>

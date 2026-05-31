@@ -1,25 +1,78 @@
 @import "tailwindcss";
 
-/* Use .dark class on <html> for the dark variant */
+/* Use .dark class on <html> for the dark variant; absence = light. */
 @variant dark (&:where(.dark, .dark *));
 
 /* ── Design tokens ───────────────────────────────────────────────────
-   Ink scale: 0 = lightest (primary text)  →  4 = darkest (page bg).
-   All values are dark-first; add a .light selector to override later.
+   Semantic, theme-aware. The ink scale is defined by ROLE, not by
+   lightness, so the same utility works in both themes:
+
+     ink-0  primary text        ink-3  borders / dividers
+     ink-1  secondary text      ink-4  page background
+     ink-2  muted / placeholder
+
+   Light values live in :root; .dark overrides them. Surfaces, borders
+   and glows are tokenised so cards flip cleanly between themes.
    ─────────────────────────────────────────────────────────────────── */
 :root {
-  --ink-0: oklch(96%  0.005 255);   /* primary text        */
-  --ink-1: oklch(80%  0.010 255);   /* secondary text      */
-  --ink-2: oklch(56%  0.014 255);   /* muted / placeholder */
-  --ink-3: oklch(28%  0.018 255);   /* borders / dividers  */
-  --ink-4: oklch( 9%  0.020 255);   /* page background     */
+  --ink-0: oklch(24%   0.020 285);   /* primary text        */
+  --ink-1: oklch(40%   0.020 285);   /* secondary text      */
+  --ink-2: oklch(54%   0.018 285);   /* muted / placeholder */
+  --ink-3: oklch(90%   0.010 285);   /* borders / dividers  */
+  --ink-4: oklch(98.6% 0.004 285);   /* page background     */
 
-  --accent:     oklch(72%  0.22 290);          /* violet            */
-  --accent-dim: oklch(72%  0.22 290 / 0.14);  /* tinted fill       */
+  --surface:        oklch(100% 0 0 / 0.78);   /* card glass        */
+  --surface-2:      oklch(96%  0.006 285);     /* chips / raised    */
+  --border:         oklch(90%  0.010 285);     /* hairline border   */
+  --border-strong:  oklch(83%  0.015 285);     /* emphasised border */
 
-  --ok:     oklch(72%  0.19 145);   /* green  */
-  --warn:   oklch(80%  0.18  78);   /* amber  */
-  --danger: oklch(68%  0.22  25);   /* red    */
+  --accent:     oklch(55%  0.22 285);          /* violet            */
+  --accent-dim: oklch(55%  0.22 285 / 0.12);   /* tinted fill       */
+
+  --ok:     oklch(56%  0.16 150);   /* green  */
+  --warn:   oklch(62%  0.16  70);   /* amber  */
+  --danger: oklch(57%  0.21  25);   /* red    */
+
+  /* Ambient page glows (kept faint in light mode) */
+  --glow-1: oklch(70% 0.18 290 / 0.08);
+  --glow-2: oklch(70% 0.16 160 / 0.07);
+  --glow-3: oklch(70% 0.14 255 / 0.05);
+
+  /* Category accents — shared across themes */
+  --col-operator:   oklch(58% 0.17 195);
+  --col-finance:    oklch(56% 0.17 150);
+  --col-blockers:   oklch(57% 0.21  25);
+  --col-session:    oklch(56% 0.22 290);
+  --col-habits:     oklch(56% 0.18 225);
+  --col-priorities: oklch(62% 0.17  70);
+  --col-nutrition:  oklch(56% 0.17 158);
+  --col-calendar:   oklch(56% 0.20 270);
+
+  color-scheme: light;
+}
+
+.dark {
+  --ink-0: oklch(96%  0.005 255);
+  --ink-1: oklch(80%  0.010 255);
+  --ink-2: oklch(60%  0.014 255);
+  --ink-3: oklch(30%  0.020 270);
+  --ink-4: oklch(8.5% 0.022 270);
+
+  --surface:        oklch(16% 0.028 270 / 0.55);
+  --surface-2:      oklch(21% 0.026 270 / 0.65);
+  --border:         oklch(30% 0.030 270 / 0.55);
+  --border-strong:  oklch(36% 0.030 270 / 0.62);
+
+  --accent:     oklch(72%  0.22 290);
+  --accent-dim: oklch(72%  0.22 290 / 0.14);
+
+  --ok:     oklch(72%  0.19 145);
+  --warn:   oklch(80%  0.18  78);
+  --danger: oklch(68%  0.22  25);
+
+  --glow-1: oklch(35% 0.14 290 / 0.13);
+  --glow-2: oklch(35% 0.14 160 / 0.11);
+  --glow-3: oklch(28% 0.08 255 / 0.09);
 
   --col-operator:   oklch(72% 0.19 195);
   --col-finance:    oklch(72% 0.19 145);
@@ -28,35 +81,42 @@
   --col-habits:     oklch(70% 0.19 225);
   --col-priorities: oklch(80% 0.19  78);
   --col-nutrition:  oklch(72% 0.19 158);
-  --col-calendar:   oklch(72% 0.20 270);  /* indigo — distinct from session violet */
+  --col-calendar:   oklch(72% 0.20 270);
+
+  color-scheme: dark;
 }
 
 /* ── Tailwind v4: expose tokens as colour utilities ──────────────────
-   bg-ink-0 … bg-ink-4, text-ink-0 … text-ink-4,
+   bg-ink-0 … bg-ink-4, text-ink-*, bg-surface, border-border,
    bg-accent, text-accent, border-ok, ring-danger, etc.
    ─────────────────────────────────────────────────────────────────── */
 @theme {
-  --color-ink-0:      var(--ink-0);
-  --color-ink-1:      var(--ink-1);
-  --color-ink-2:      var(--ink-2);
-  --color-ink-3:      var(--ink-3);
-  --color-ink-4:      var(--ink-4);
+  --color-ink-0:         var(--ink-0);
+  --color-ink-1:         var(--ink-1);
+  --color-ink-2:         var(--ink-2);
+  --color-ink-3:         var(--ink-3);
+  --color-ink-4:         var(--ink-4);
 
-  --color-accent:     var(--accent);
-  --color-accent-dim: var(--accent-dim);
+  --color-surface:       var(--surface);
+  --color-surface-2:     var(--surface-2);
+  --color-border:        var(--border);
+  --color-border-strong: var(--border-strong);
 
-  --color-ok:         var(--ok);
-  --color-warn:       var(--warn);
-  --color-danger:     var(--danger);
+  --color-accent:        var(--accent);
+  --color-accent-dim:    var(--accent-dim);
 
-  --color-operator:   var(--col-operator);
-  --color-finance:    var(--col-finance);
-  --color-blockers:   var(--col-blockers);
-  --color-session:    var(--col-session);
-  --color-habits:     var(--col-habits);
-  --color-priorities: var(--col-priorities);
-  --color-nutrition:  var(--col-nutrition);
-  --color-calendar:   var(--col-calendar);
+  --color-ok:            var(--ok);
+  --color-warn:          var(--warn);
+  --color-danger:        var(--danger);
+
+  --color-operator:      var(--col-operator);
+  --color-finance:       var(--col-finance);
+  --color-blockers:      var(--col-blockers);
+  --color-session:       var(--col-session);
+  --color-habits:        var(--col-habits);
+  --color-priorities:    var(--col-priorities);
+  --color-nutrition:     var(--col-nutrition);
+  --color-calendar:      var(--col-calendar);
 
   --animate-pulse-dot: pulse-dot 2.2s ease-in-out infinite;
 }
@@ -81,5 +141,31 @@
   html {
     background-color: var(--ink-4);
     color: var(--ink-0);
+    /* Smooth the cross-theme switch without animating page loads. */
+    transition: background-color 0.25s ease;
   }
+
+  body {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: color-mix(in oklch, var(--accent) 28%, transparent);
+    color: var(--ink-0);
+  }
+
+  /* Themed scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-track { background: transparent; }
 }

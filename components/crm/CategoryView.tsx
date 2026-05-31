@@ -60,7 +60,7 @@ export default function CategoryView({ tasks, entities, onTaskClick }: Props) {
             {/* Group header */}
             <div
               className="flex items-center gap-3 mb-2 pb-2"
-              style={{ borderBottom: "1px solid oklch(28% 0.030 255 / 0.45)" }}
+              style={{ borderBottom: "1px solid var(--border)" }}
             >
               <div>
                 <span className="text-[14px] font-semibold" style={{ color: "var(--ink-0)" }}>

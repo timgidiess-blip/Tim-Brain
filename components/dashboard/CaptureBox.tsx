@@ -64,11 +64,11 @@ function Toast({
         animation: toast.exiting
           ? "toast-out 0.22s ease-in forwards"
           : "toast-in 0.22s ease-out forwards",
-        background:     "oklch(18% 0.028 255 / 0.92)",
+        background:     "var(--surface)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
-        border:         "1px solid oklch(40% 0.028 255 / 0.5)",
-        borderTop:      "1px solid oklch(55% 0.028 255 / 0.4)",
+        border:         "1px solid var(--border)",
+        borderTop:      "1px solid var(--border-strong)",
       }}
       className="rounded-[10px] px-4 py-3 flex items-start gap-3 shadow-xl max-w-[420px] w-full"
     >
@@ -223,11 +223,11 @@ export default function CaptureBox() {
 
   // ── Panel glass style ─────────────────────────────────────────────────────
   const glassStyle: React.CSSProperties = {
-    background:     "oklch(16% 0.028 255 / 0.72)",
+    background:     "var(--surface)",
     backdropFilter: "blur(24px)",
     WebkitBackdropFilter: "blur(24px)",
-    border:         "1px solid oklch(35% 0.030 255 / 0.55)",
-    borderTop:      "1px solid oklch(50% 0.030 255 / 0.45)",
+    border:         "1px solid var(--border)",
+    borderTop:      "1px solid var(--border-strong)",
   };
 
   return (
@@ -283,9 +283,9 @@ export default function CaptureBox() {
             <kbd
               className="text-[11px] px-1.5 py-0.5 rounded-[4px]"
               style={{
-                background: "oklch(28% 0.018 255 / 0.7)",
+                background: "var(--surface-2)",
                 color:      "var(--ink-2)",
-                border:     "1px solid oklch(35% 0.020 255 / 0.5)",
+                border:     "1px solid var(--border)",
                 fontFamily: "inherit",
               }}
             >
@@ -334,7 +334,7 @@ export default function CaptureBox() {
             <div
               className="flex items-center justify-between px-4 py-2.5"
               style={{
-                borderTop: "1px solid oklch(35% 0.020 255 / 0.35)",
+                borderTop: "1px solid var(--border)",
               }}
             >
               <span

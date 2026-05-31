@@ -13,9 +13,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Synapse",
-  description: "Personal AI dashboard",
+  metadataBase: new URL("https://timbrain.vercel.app"),
+  title: "Tim's Brain",
+  description: "Tim's Brain — capture, organise, and recall everything in one place.",
 };
+
+// Applies the saved (or system) theme before paint to avoid a flash.
+const themeScript = `(function(){try{var t=localStorage.getItem('tb:theme');var d=t?t==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.classList.toggle('dark',d);}catch(e){document.documentElement.classList.add('dark');}})();`;
 
 export default function RootLayout({
   children,
@@ -23,7 +27,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

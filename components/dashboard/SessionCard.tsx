@@ -29,7 +29,7 @@ const URGENCY_CHIP: Record<string, { label: string; color: string; bg: string }>
   today:      { label: "Today",     color: "var(--danger)", bg: "oklch(68% 0.22 25 / 0.12)"  },
   this_week:  { label: "This Week", color: "var(--warn)",   bg: "oklch(80% 0.18 78 / 0.12)"  },
   this_month: { label: "Month",     color: "var(--col-habits)", bg: "oklch(70% 0.19 225 / 0.12)" },
-  someday:    { label: "Someday",   color: "var(--ink-2)",  bg: "oklch(28% 0.018 255 / 0.35)" },
+  someday:    { label: "Someday",   color: "var(--ink-2)",  bg: "var(--surface-2)" },
 };
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
@@ -104,8 +104,8 @@ function TaskRow({ task, rank }: { task: Task; rank: number }) {
       href={`/tasks/${task.id}`}
       className="group flex items-start gap-3 rounded-[9px] px-3 py-[10px] transition-colors"
       style={{
-        background: "oklch(20% 0.025 255 / 0.50)",
-        border:     "1px solid oklch(28% 0.030 255 / 0.55)",
+        background: "var(--surface-2)",
+        border:     "1px solid var(--border)",
       }}
       // hover via CSS var injection — Tailwind group-hover for bg
     >
@@ -146,7 +146,7 @@ function TaskRow({ task, rank }: { task: Task; rank: number }) {
               className="text-[9px] font-mono px-[6px] py-[2px] rounded-[4px]"
               style={{
                 color:      "var(--ink-2)",
-                background: "oklch(28% 0.018 255 / 0.40)",
+                background: "var(--surface-2)",
               }}
             >
               ⏱ {timeStr}
@@ -173,8 +173,8 @@ function EmptyState() {
     <div
       className="rounded-[9px] px-4 py-5 text-center"
       style={{
-        background: "oklch(20% 0.025 255 / 0.40)",
-        border:     "1px solid oklch(28% 0.030 255 / 0.55)",
+        background: "var(--surface-2)",
+        border:     "1px solid var(--border)",
       }}
     >
       <div className="text-[22px] mb-2 select-none">✅</div>

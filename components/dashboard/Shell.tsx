@@ -8,9 +8,9 @@ export default function Shell({ children }: { children: ReactNode }) {
         className="fixed inset-0 pointer-events-none z-0"
         style={{
           background: [
-            "radial-gradient(ellipse 55% 35% at 15% 15%, oklch(35% 0.14 290 / 0.13) 0%, transparent 70%)",
-            "radial-gradient(ellipse 45% 35% at 85% 80%, oklch(35% 0.14 160 / 0.11) 0%, transparent 70%)",
-            "radial-gradient(ellipse 40% 40% at 50% 45%, oklch(28% 0.08 255 / 0.09) 0%, transparent 70%)",
+            "radial-gradient(ellipse 55% 35% at 15% 15%, var(--glow-1) 0%, transparent 70%)",
+            "radial-gradient(ellipse 45% 35% at 85% 80%, var(--glow-2) 0%, transparent 70%)",
+            "radial-gradient(ellipse 40% 40% at 50% 45%, var(--glow-3) 0%, transparent 70%)",
           ].join(", "),
         }}
       />

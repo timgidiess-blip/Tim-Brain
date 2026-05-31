@@ -157,7 +157,7 @@ export async function GET(_req: NextRequest): Promise<NextResponse> {
 
   try {
     const res = await fetch(icalUrl, {
-      headers: { "User-Agent": "Synapse/1.0 (ical-fetcher)" },
+      headers: { "User-Agent": "TimsBrain/1.0 (ical-fetcher)" },
       // Always bypass Next.js fetch cache — module cache is our own TTL layer
       cache: "no-store",
     });
