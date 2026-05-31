@@ -1,15 +1,14 @@
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
-import { COOKIE_NAME, SESSION_COOKIE_OPTIONS, signSession } from "@/lib/auth";
-import { getDb } from "@/lib/supabase";
-import { OWNER_ID } from "@/lib/webauthn";
-
-const enc = new TextEncoder();
-
-async function hashPin(pin: string): Promise<string> {
-  const buf = await crypto.subtle.digest("SHA-256", enc.encode(pin));
-  return btoa(String.fromCharCode(...new Uint8Array(buf)));
-}
+import {
+  COOKIE_NAME,
+  SESSION_COOKIE_OPTIONS,
+  signSession,
+  verifyPin,
+  DEFAULT_PIN,
+  ownerId,
+} from "@/lib/auth";
+import { getPinHash } from "@/lib/authStore";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const authSecret = process.env.AUTH_SECRET;
@@ -17,10 +16,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
   }
 
+  // Parse body — accept `pin` (preferred) or legacy `password`.
   let pin = "";
   try {
-    const body = await req.json() as { pin?: string; password?: string };
-    pin = body.pin ?? body.password ?? "";
+    const body: unknown = await req.json();
+    if (body !== null && typeof body === "object") {
+      const b = body as Record<string, unknown>;
+      if (typeof b.pin === "string") pin = b.pin;
+      else if (typeof b.password === "string") pin = b.password;
+    }
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
@@ -29,26 +33,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "PIN required" }, { status: 400 });
   }
 
-  // Fetch stored PIN hash from DB (default: hash of "0000")
-  const db = getDb();
-  const { data } = await db
-    .from("user_settings")
-    .select("value")
-    .eq("user_id", OWNER_ID)
-    .eq("key", "pin_hash")
-    .maybeSingle();
+  // Prefer the stored PIN hash; before the 0002 migration / first set, fall
+  // back to the default PIN so the owner is never locked out.
+  const stored = await getPinHash(ownerId());
+  const valid = stored ? await verifyPin(pin, stored) : pin === DEFAULT_PIN;
 
-  const storedHash = data?.value ?? (await hashPin("0000"));
-  const candidateHash = await hashPin(pin);
-
-  if (candidateHash !== storedHash) {
-    await new Promise<void>(r => setTimeout(r, 300));
-    return NextResponse.json({ error: "Incorrect PIN" }, { status: 401 });
+  if (!valid) {
+    // Small artificial delay to blunt brute-force without blocking the event loop.
+    await new Promise<void>(r => setTimeout(r, 400));
+    return NextResponse.json({ error: "Invalid PIN" }, { status: 401 });
   }
 
   const token = await signSession(authSecret);
-  const jar   = await cookies();
+  const jar = await cookies();
   jar.set(COOKIE_NAME, token, SESSION_COOKIE_OPTIONS);
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, usingDefaultPin: !stored });
 }

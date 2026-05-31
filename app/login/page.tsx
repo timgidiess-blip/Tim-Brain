@@ -1,114 +1,128 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  startAuthentication,
-  startRegistration,
-} from "@simplewebauthn/browser";
+import { useEffect, useRef, useState } from "react";
+import { browserSupportsWebAuthn, startAuthentication } from "@simplewebauthn/browser";
 
+// Validates that the redirect target is a same-origin relative path.
 function safeFrom(raw: string | null): string {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/";
   return raw;
 }
 
-const DIGITS = ["1","2","3","4","5","6","7","8","9","","0","⌫"];
+// Extracts an "error" string from an unknown JSON body, with a fallback.
+function errorFrom(data: unknown, fallback: string): string {
+  if (
+    data !== null &&
+    typeof data === "object" &&
+    "error" in data &&
+    typeof (data as Record<string, unknown>).error === "string"
+  ) {
+    return (data as { error: string }).error;
+  }
+  return fallback;
+}
 
 export default function LoginPage() {
-  const [pin,        setPin]        = useState("");
-  const [error,      setError]      = useState<string | null>(null);
-  const [pending,    setPending]    = useState(false);
-  const [hasPasskey, setHasPasskey] = useState(false);
+  const pinRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const [webauthnSupported, setWebauthnSupported] = useState(false);
+  const [passkeyPending, setPasskeyPending] = useState(false);
+  const [passkeyNote, setPasskeyNote] = useState<string | null>(null);
 
+  // browserSupportsWebAuthn is client-only — check after mount.
   useEffect(() => {
-    fetch("/api/auth/webauthn/authenticate")
-      .then(r => { if (r.ok) setHasPasskey(true); })
-      .catch(() => {});
+    setWebauthnSupported(browserSupportsWebAuthn());
   }, []);
 
-  useEffect(() => {
-    if (pin.length === 4) void submitPin(pin);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pin]);
+  function redirect() {
+    // Hard navigation so the browser re-runs middleware with the new cookie.
+    const from = safeFrom(new URLSearchParams(window.location.search).get("from"));
+    window.location.href = from;
+  }
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (pending) return;
-      if (e.key >= "0" && e.key <= "9") press(e.key);
-      else if (e.key === "Backspace") press("⌫");
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pending, pin]);
-
-  async function submitPin(value: string) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setError(null);
+    setPasskeyNote(null);
     setPending(true);
+
     try {
       const res = await fetch("/api/auth/login", {
-        method  : "POST",
-        headers : { "Content-Type": "application/json" },
-        body    : JSON.stringify({ pin: value }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: pinRef.current?.value ?? "" }),
       });
+
       if (res.ok) {
-        const from = safeFrom(new URLSearchParams(window.location.search).get("from"));
-        window.location.href = from;
+        redirect();
         return;
       }
-      const data = await res.json() as { error?: string };
-      setError(data.error ?? "Incorrect PIN");
-      setPin("");
+
+      const data: unknown = await res.json();
+      setError(errorFrom(data, "Login failed"));
+      pinRef.current?.select();
     } catch {
       setError("Network error — please try again");
-      setPin("");
     } finally {
       setPending(false);
     }
   }
 
-  async function handleBiometric() {
+  async function handlePasskey() {
     setError(null);
-    setPending(true);
+    setPasskeyNote(null);
+    setPasskeyPending(true);
+
     try {
-      const optRes = await fetch("/api/auth/webauthn/authenticate");
-      if (!optRes.ok) { setError("No passkey registered"); setPending(false); return; }
-      const options = await optRes.json();
+      const optsRes = await fetch("/api/auth/webauthn/login/options", { method: "POST" });
 
-      const assertion = await startAuthentication({ optionsJSON: options });
-
-      const verRes = await fetch("/api/auth/webauthn/authenticate", {
-        method  : "POST",
-        headers : { "Content-Type": "application/json" },
-        body    : JSON.stringify(assertion),
-      });
-
-      if (verRes.ok) {
-        const from = safeFrom(new URLSearchParams(window.location.search).get("from"));
-        window.location.href = from;
+      if (optsRes.status === 404) {
+        setPasskeyNote(
+          "No passkeys enrolled yet — sign in with your PIN, then add Face ID / Touch ID in Settings.",
+        );
         return;
       }
-      const data = await verRes.json() as { error?: string };
-      setError(data.error ?? "Biometric verification failed");
-    } catch (err: unknown) {
-      if (err instanceof Error && err.name !== "NotAllowedError") {
-        setError("Biometric failed — use PIN instead");
+      if (!optsRes.ok) {
+        const data: unknown = await optsRes.json().catch(() => null);
+        setError(errorFrom(data, "Could not start passkey sign-in"));
+        return;
       }
-    } finally {
-      setPending(false);
-    }
-  }
 
-  function press(d: string) {
-    if (pending) return;
-    if (d === "⌫") { setPin(p => p.slice(0, -1)); setError(null); return; }
-    if (d === "")  return;
-    if (pin.length >= 4) return;
-    setPin(p => p + d);
+      const optionsJSON = await optsRes.json();
+
+      let asseResp;
+      try {
+        asseResp = await startAuthentication({ optionsJSON });
+      } catch {
+        // User cancelled the biometric prompt or it was dismissed.
+        setError("Passkey sign-in was cancelled.");
+        return;
+      }
+
+      const verifyRes = await fetch("/api/auth/webauthn/login/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ response: asseResp }),
+      });
+
+      if (verifyRes.ok) {
+        redirect();
+        return;
+      }
+
+      const data: unknown = await verifyRes.json().catch(() => null);
+      setError(errorFrom(data, "Passkey sign-in failed"));
+    } catch {
+      setError("Network error — please try again");
+    } finally {
+      setPasskeyPending(false);
+    }
   }
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-[320px]">
+      <div className="w-full max-w-[360px]">
 
         {/* Brand */}
         <div className="flex items-center justify-center gap-2.5 mb-10">
@@ -147,61 +161,118 @@ export default function LoginPage() {
             boxShadow: "0 1px 2px oklch(0% 0 0 / 0.05), 0 16px 40px -20px oklch(0% 0 0 / 0.28)",
           }}
         >
-          <h1 className="text-sm font-semibold text-ink-0 mb-1 text-center">Enter your PIN</h1>
-          <p className="text-xs text-ink-2 mb-6 text-center">This is a private instance.</p>
+          {/* Heading */}
+          <h1 className="text-sm font-semibold text-ink-0 mb-1">
+            Sign in to your dashboard
+          </h1>
+          <p className="text-xs text-ink-2 mb-6">This is a private instance.</p>
 
-          {/* PIN dots */}
-          <div className="flex justify-center gap-4 mb-6">
-            {[0,1,2,3].map(i => (
-              <div
-                key={i}
-                className="w-3 h-3 rounded-full border-2 transition-all duration-150"
-                style={{
-                  borderColor : "var(--accent)",
-                  background  : i < pin.length ? "var(--accent)" : "transparent",
-                  transform   : i < pin.length ? "scale(1.15)" : "scale(1)",
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Error */}
-          {error && (
-            <p role="alert" className="text-xs text-danger text-center mb-4">{error}</p>
-          )}
-
-          {/* Number pad */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            {DIGITS.map((d, i) => (
-              <button
-                key={i}
-                onClick={() => press(d)}
-                disabled={pending || d === ""}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            {/* PIN field */}
+            <div>
+              <label htmlFor="pin" className="sr-only">PIN</label>
+              <input
+                ref={pinRef}
+                id="pin"
+                name="pin"
+                type="password"
+                inputMode="numeric"
+                pattern="\d*"
+                autoComplete="one-time-code"
+                maxLength={8}
+                autoFocus
+                required
+                placeholder="• • • •"
+                aria-describedby={error ? "login-error" : undefined}
                 className={[
-                  "rounded-xl py-3 text-lg font-semibold transition-all duration-100",
-                  d === ""
-                    ? "invisible"
-                    : d === "⌫"
-                    ? "bg-ink-4 text-ink-1 hover:bg-ink-3 active:scale-95"
-                    : "bg-ink-4 text-ink-0 hover:bg-ink-3 active:scale-95",
-                  "disabled:opacity-40 disabled:cursor-not-allowed",
+                  "w-full rounded-lg px-3.5 py-3 text-lg text-center tracking-[0.5em]",
+                  "bg-ink-4 text-ink-0 placeholder:text-ink-2 placeholder:tracking-[0.3em]",
+                  "border outline-none",
+                  "transition-[border-color,box-shadow] duration-150",
+                  "focus:ring-2 focus:ring-offset-0",
+                  error
+                    ? "border-danger/60 focus:border-danger/70 focus:ring-danger/20"
+                    : "border-ink-3 focus:border-accent/60 focus:ring-accent/20",
                 ].join(" ")}
-              >
-                {d}
-              </button>
-            ))}
-          </div>
+              />
+              {error && (
+                <p
+                  id="login-error"
+                  role="alert"
+                  className="mt-2 text-xs text-danger"
+                >
+                  {error}
+                </p>
+              )}
+            </div>
 
-          {/* Biometric button */}
-          <button
-            onClick={handleBiometric}
-            disabled={pending}
-            className="w-full rounded-xl py-2.5 text-sm font-semibold bg-accent hover:opacity-90 active:opacity-75 disabled:opacity-40 transition-opacity"
-            style={{ color: "var(--ink-4)" }}
-          >
-            {pending ? "Verifying…" : "Face ID / Touch ID"}
-          </button>
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={pending || passkeyPending}
+              className={[
+                "w-full rounded-lg py-2.5 px-4",
+                "text-sm font-semibold",
+                "bg-accent transition-opacity duration-150",
+                "hover:opacity-90 active:opacity-75",
+                "disabled:cursor-not-allowed disabled:opacity-40",
+              ].join(" ")}
+              style={{ color: "var(--ink-4)" }}
+            >
+              {pending ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
+
+          {/* Passkey sign-in — client-only, only when supported */}
+          {webauthnSupported && (
+            <>
+              {/* "or" divider */}
+              <div className="flex items-center gap-3 my-5" aria-hidden>
+                <div className="h-px flex-1" style={{ background: "var(--border)" }} />
+                <span className="text-[11px] uppercase tracking-[0.08em] text-ink-2">or</span>
+                <div className="h-px flex-1" style={{ background: "var(--border)" }} />
+              </div>
+
+              <button
+                type="button"
+                onClick={handlePasskey}
+                disabled={pending || passkeyPending}
+                aria-label="Sign in with Face ID or Touch ID"
+                className={[
+                  "w-full rounded-lg py-2.5 px-4 flex items-center justify-center gap-2",
+                  "text-sm font-semibold",
+                  "transition-opacity duration-150",
+                  "hover:opacity-90 active:opacity-75",
+                  "disabled:cursor-not-allowed disabled:opacity-40",
+                ].join(" ")}
+                style={{
+                  background: "var(--surface-2)",
+                  color: "var(--ink-0)",
+                  border: "1px solid var(--border-strong)",
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M4 8V6.5A2.5 2.5 0 0 1 6.5 4H8M16 4h1.5A2.5 2.5 0 0 1 20 6.5V8M20 16v1.5a2.5 2.5 0 0 1-2.5 2.5H16M8 20H6.5A2.5 2.5 0 0 1 4 17.5V16"
+                    stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"
+                  />
+                  <path
+                    d="M9 10v1M15 10v1M9.5 15c.7.7 1.6 1 2.5 1s1.8-.3 2.5-1"
+                    stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"
+                  />
+                </svg>
+                {passkeyPending ? "Waiting for device…" : "Sign in with Face ID / Touch ID"}
+              </button>
+
+              {passkeyNote && (
+                <p role="status" className="mt-3 text-xs text-ink-2 text-center">
+                  {passkeyNote}
+                </p>
+              )}
+            </>
+          )}
         </div>
+
       </div>
     </main>
   );

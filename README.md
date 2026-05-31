@@ -33,7 +33,28 @@ Open [http://localhost:3000](http://localhost:3000).
 | `ANTHROPIC_API_KEY` | Primary capture classifier (Claude) |
 | `OPENAI_API_KEY` | Fallback classifier, Whisper transcription, embeddings |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_USER_ID`, `TELEGRAM_WEBHOOK_SECRET` | Telegram capture |
-| `AUTH_PASSWORD`, `AUTH_SECRET` | Dashboard sign-in |
+| `AUTH_SECRET` | HMAC key that signs the session cookie |
+| `DASHBOARD_PASSWORD` | Optional — programmatic `x-api-secret` access (CLI/cron) |
+| `WEBAUTHN_RP_ID`, `WEBAUTHN_ORIGIN` | Optional — override the passkey relying-party id / origin (defaults to the request host) |
+
+## Authentication
+
+Browser sign-in uses a **PIN** (default `0000`) plus optional **passkeys**
+(Face ID on iPhone, Touch ID on Mac) via WebAuthn. The session itself is an
+HMAC-signed cookie — PIN and passkey flows both just mint that cookie.
+
+- **PIN** — the hash lives in the `auth_config` table and can be changed from
+  the **⚙ Security** panel in the CRM. Until the `0002` migration is applied
+  (or a PIN is set), login falls back to `0000`.
+- **Passkeys** — enroll a device from the same Security panel while signed in,
+  then use "Sign in with Face ID / Touch ID" on the login screen. Credentials
+  live in `webauthn_credentials`.
+
+### Database migration
+
+Apply `supabase/migrations/0002_auth.sql` (auth tables) in your Supabase SQL
+editor before relying on PIN persistence or passkeys. It is idempotent
+(`CREATE TABLE IF NOT EXISTS …`).
 
 ## Theming
 

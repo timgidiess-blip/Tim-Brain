@@ -6,26 +6,26 @@ import KanbanView   from "./KanbanView";
 import SmartView    from "./SmartView";
 import CategoryView from "./CategoryView";
 import TaskDrawer   from "./TaskDrawer";
-import PinSettings  from "./PinSettings";
+import SecurityPanel from "../settings/SecurityPanel";
 
 const VIEW_KEY = "synapse:crm:view";
 
-const VIEWS: { id: CRMView | "settings"; label: string }[] = [
+const VIEWS: { id: CRMView; label: string }[] = [
   { id: "kanban",   label: "Kanban" },
   { id: "smart",    label: "✦ Smart" },
   { id: "category", label: "Category" },
-  { id: "settings", label: "⚙ Settings" },
 ];
 
 export default function CRMPage() {
   const [tasks,        setTasks]        = useState<Task[]>([]);
   const [entities,     setEntities]     = useState<Entity[]>([]);
   const [loading,      setLoading]      = useState(true);
-  const [view,         setView]         = useState<CRMView | "settings">("kanban");
+  const [view,         setView]         = useState<CRMView>("kanban");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);  // null = create
   const [drawerOpen,   setDrawerOpen]   = useState(false);
   const [newUrgency,   setNewUrgency]   = useState<Urgency>("this_week");
-  const viewRef = useRef<CRMView | "settings">("kanban");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const viewRef = useRef<CRMView>("kanban");
 
   /* ─── Restore view from localStorage ─── */
   useEffect(() => {
@@ -60,7 +60,7 @@ export default function CRMPage() {
   useEffect(() => { void loadData(); }, [loadData]);
 
   /* ─── View change ─── */
-  function changeView(v: CRMView | "settings") {
+  function changeView(v: CRMView) {
     setView(v);
     viewRef.current = v;
     try { localStorage.setItem(VIEW_KEY, v); } catch { /* ignore */ }
@@ -175,26 +175,39 @@ export default function CRMPage() {
         <div className="flex-1" />
 
         {/* Task count */}
-        {!loading && view !== "settings" && (
+        {!loading && (
           <span className="text-[12px]" style={{ color: "var(--ink-2)" }}>
             {tasks.filter(t => !t.completed_at).length} open
           </span>
         )}
 
+        {/* Security settings */}
+        <button
+          onClick={() => setSettingsOpen(true)}
+          aria-label="Open security settings"
+          title="Security settings"
+          className="flex items-center justify-center w-[30px] h-[30px] rounded-[8px] text-[15px] transition-all"
+          style={{
+            background: "var(--surface-2)",
+            border: "1px solid var(--border)",
+            color: "var(--ink-1)",
+          }}
+        >
+          ⚙
+        </button>
+
         {/* New task button */}
-        {view !== "settings" && (
-          <button
-            onClick={() => openCreate()}
-            className="flex items-center gap-[6px] px-3 py-[6px] rounded-[8px] text-[12px] font-semibold transition-all"
-            style={{
-              background: "var(--col-session)",
-              color:      "#000",
-            }}
-          >
-            <span className="text-[14px] leading-none">+</span>
-            New Task
-          </button>
-        )}
+        <button
+          onClick={() => openCreate()}
+          className="flex items-center gap-[6px] px-3 py-[6px] rounded-[8px] text-[12px] font-semibold transition-all"
+          style={{
+            background: "var(--col-session)",
+            color:      "#000",
+          }}
+        >
+          <span className="text-[14px] leading-none">+</span>
+          New Task
+        </button>
       </div>
 
       {/* Loading state */}
@@ -230,7 +243,6 @@ export default function CRMPage() {
               onTaskClick={openEdit}
             />
           )}
-          {view === "settings" && <PinSettings />}
         </div>
       )}
 
@@ -245,6 +257,11 @@ export default function CRMPage() {
           onDelete={handleDelete}
           onComplete={handleComplete}
         />
+      )}
+
+      {/* Security settings panel */}
+      {settingsOpen && (
+        <SecurityPanel onClose={() => setSettingsOpen(false)} />
       )}
     </div>
   );
