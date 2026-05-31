@@ -30,6 +30,17 @@ export default function LoginPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pin]);
 
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (pending) return;
+      if (e.key >= "0" && e.key <= "9") press(e.key);
+      else if (e.key === "Backspace") press("⌫");
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pending, pin]);
+
   async function submitPin(value: string) {
     setError(null);
     setPending(true);
@@ -182,16 +193,14 @@ export default function LoginPage() {
           </div>
 
           {/* Biometric button */}
-          {hasPasskey && (
-            <button
-              onClick={handleBiometric}
-              disabled={pending}
-              className="w-full rounded-xl py-2.5 text-sm font-semibold bg-accent hover:opacity-90 active:opacity-75 disabled:opacity-40 transition-opacity"
-              style={{ color: "var(--ink-4)" }}
-            >
-              {pending ? "Verifying…" : "Touch ID / Face ID"}
-            </button>
-          )}
+          <button
+            onClick={handleBiometric}
+            disabled={pending}
+            className="w-full rounded-xl py-2.5 text-sm font-semibold bg-accent hover:opacity-90 active:opacity-75 disabled:opacity-40 transition-opacity"
+            style={{ color: "var(--ink-4)" }}
+          >
+            {pending ? "Verifying…" : "Face ID / Touch ID"}
+          </button>
         </div>
       </div>
     </main>
