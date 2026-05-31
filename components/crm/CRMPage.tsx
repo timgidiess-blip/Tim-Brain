@@ -6,6 +6,7 @@ import KanbanView   from "./KanbanView";
 import SmartView    from "./SmartView";
 import CategoryView from "./CategoryView";
 import TaskDrawer   from "./TaskDrawer";
+import SecurityPanel from "../settings/SecurityPanel";
 
 const VIEW_KEY = "synapse:crm:view";
 
@@ -23,6 +24,7 @@ export default function CRMPage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);  // null = create
   const [drawerOpen,   setDrawerOpen]   = useState(false);
   const [newUrgency,   setNewUrgency]   = useState<Urgency>("this_week");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const viewRef = useRef<CRMView>("kanban");
 
   /* ─── Restore view from localStorage ─── */
@@ -179,6 +181,21 @@ export default function CRMPage() {
           </span>
         )}
 
+        {/* Security settings */}
+        <button
+          onClick={() => setSettingsOpen(true)}
+          aria-label="Open security settings"
+          title="Security settings"
+          className="flex items-center justify-center w-[30px] h-[30px] rounded-[8px] text-[15px] transition-all"
+          style={{
+            background: "var(--surface-2)",
+            border: "1px solid var(--border)",
+            color: "var(--ink-1)",
+          }}
+        >
+          ⚙
+        </button>
+
         {/* New task button */}
         <button
           onClick={() => openCreate()}
@@ -240,6 +257,11 @@ export default function CRMPage() {
           onDelete={handleDelete}
           onComplete={handleComplete}
         />
+      )}
+
+      {/* Security settings panel */}
+      {settingsOpen && (
+        <SecurityPanel onClose={() => setSettingsOpen(false)} />
       )}
     </div>
   );
