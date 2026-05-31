@@ -14,8 +14,8 @@ export default function OperatorCard() {
         <div
           className="w-10 h-10 rounded-[10px] shrink-0 flex items-center justify-center text-[15px] font-bold select-none"
           style={{
-            background: `linear-gradient(135deg, var(--col-operator) / 0.25, var(--col-session) / 0.25)`,
-            border:     "1px solid oklch(72% 0.19 195 / 0.35)",
+            background: `linear-gradient(135deg, color-mix(in oklch, var(--col-operator) 25%, transparent), color-mix(in oklch, var(--col-session) 25%, transparent))`,
+            border:     "1px solid color-mix(in oklch, var(--col-operator) 35%, transparent)",
             color:      ACCENT,
           }}
         >
@@ -53,7 +53,7 @@ export default function OperatorCard() {
       {/* Divider */}
       <div
         className="h-px mb-4"
-        style={{ background: "oklch(28% 0.030 255 / 0.55)" }}
+        style={{ background: "var(--border)" }}
       />
 
       {/* Location + timezone */}
@@ -65,7 +65,7 @@ export default function OperatorCard() {
       {/* Divider */}
       <div
         className="h-px mb-4"
-        style={{ background: "oklch(28% 0.030 255 / 0.55)" }}
+        style={{ background: "var(--border)" }}
       />
 
       {/* Current focus */}
@@ -78,8 +78,8 @@ export default function OperatorCard() {
       <div
         className="rounded-[8px] px-3 py-[10px] mb-3"
         style={{
-          background:  "oklch(72% 0.19 195 / 0.08)",
-          border:      "1px solid oklch(72% 0.19 195 / 0.22)",
+          background:  "color-mix(in oklch, var(--col-operator) 8%, transparent)",
+          border:      "1px solid color-mix(in oklch, var(--col-operator) 22%, transparent)",
           borderLeft:  `3px solid ${ACCENT}`,
         }}
       >
@@ -95,8 +95,8 @@ export default function OperatorCard() {
             key={tag}
             className="text-[9px] px-[8px] py-[3px] rounded-[5px] font-mono"
             style={{
-              background:  "oklch(20% 0.025 255 / 0.65)",
-              border:      "1px solid oklch(28% 0.030 255 / 0.55)",
+              background:  "var(--surface-2)",
+              border:      "1px solid var(--border)",
               color:       "var(--ink-2)",
             }}
           >

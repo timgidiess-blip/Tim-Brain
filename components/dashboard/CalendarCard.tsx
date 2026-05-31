@@ -121,8 +121,8 @@ function TimedEventRow({ ev }: { ev: CalEvent }) {
   const c = eventColor(ev);
   return (
     <div className="flex gap-2 rounded-[6px] px-3 py-[8px] mb-[5px]"
-      style={{ background: "oklch(20% 0.025 255 / 0.50)",
-               border: "1px solid oklch(28% 0.030 255 / 0.55)", borderLeft: `3px solid ${c}` }}>
+      style={{ background: "var(--surface-2)",
+               border: "1px solid var(--border)", borderLeft: `3px solid ${c}` }}>
       <div className="shrink-0 w-[44px] text-right">
         <span className="text-[10px] font-mono leading-tight block" style={{ color: c }}>
           {fmtTime(ev.start)}
@@ -231,8 +231,8 @@ export default function CalendarCard() {
           onClick={() => { setWeekOffset(w => Math.max(0, w - 1)); }}
           disabled={weekOffset === 0}
           className="shrink-0 w-[22px] h-[22px] rounded-[5px] flex items-center justify-center transition-opacity disabled:opacity-25"
-          style={{ background: "oklch(20% 0.025 255 / 0.50)",
-                   border:     "1px solid oklch(28% 0.030 255 / 0.55)",
+          style={{ background: "var(--surface-2)",
+                   border:     "1px solid var(--border)",
                    color:      "var(--ink-1)" }}
         >
           ‹
@@ -256,8 +256,8 @@ export default function CalendarCard() {
           onClick={() => setWeekOffset(w => Math.min(8, w + 1))}
           disabled={weekOffset >= 8}
           className="shrink-0 w-[22px] h-[22px] rounded-[5px] flex items-center justify-center transition-opacity disabled:opacity-25"
-          style={{ background: "oklch(20% 0.025 255 / 0.50)",
-                   border:     "1px solid oklch(28% 0.030 255 / 0.55)",
+          style={{ background: "var(--surface-2)",
+                   border:     "1px solid var(--border)",
                    color:      "var(--ink-1)" }}
         >
           ›
@@ -265,7 +265,7 @@ export default function CalendarCard() {
       </div>
 
       {/* Divider */}
-      <div className="h-px mb-3" style={{ background: "oklch(28% 0.030 255 / 0.55)" }} />
+      <div className="h-px mb-3" style={{ background: "var(--border)" }} />
 
       {/* ── Event list ────────────────────────────────────────────────── */}
       {loading ? (
@@ -336,7 +336,7 @@ function Skeleton() {
     <div className="flex flex-col gap-2 animate-pulse">
       {[80, 60, 75].map((w) => (
         <div key={w} className="h-[46px] rounded-[6px]"
-          style={{ background: "oklch(20% 0.025 255 / 0.50)", width: `${w}%` }} />
+          style={{ background: "var(--surface-2)", width: `${w}%` }} />
       ))}
     </div>
   );
@@ -345,8 +345,8 @@ function Skeleton() {
 function EmptyDay({ nextEvent }: { nextEvent?: CalEvent }) {
   return (
     <div className="rounded-[8px] px-4 py-4 text-center"
-      style={{ background: "oklch(20% 0.025 255 / 0.40)",
-               border: "1px solid oklch(28% 0.030 255 / 0.55)" }}>
+      style={{ background: "var(--surface-2)",
+               border: "1px solid var(--border)" }}>
       <div className="text-[20px] mb-1 select-none">🗓</div>
       <p className="text-[11px] font-medium mb-1" style={{ color: "var(--ink-1)" }}>
         Nothing scheduled
@@ -371,8 +371,8 @@ function ErrorState({ message }: { message: string }) {
   const isUnconfigured = message.includes("not configured");
   return (
     <div className="rounded-[8px] px-4 py-4 text-center"
-      style={{ background: "oklch(20% 0.025 255 / 0.40)",
-               border: "1px solid oklch(28% 0.030 255 / 0.55)" }}>
+      style={{ background: "var(--surface-2)",
+               border: "1px solid var(--border)" }}>
       <div className="text-[18px] mb-1 select-none">{isUnconfigured ? "🔑" : "⚠️"}</div>
       <p className="text-[11px] font-medium mb-1" style={{ color: "var(--ink-1)" }}>
         {isUnconfigured ? "Calendar not connected" : "Could not load calendar"}

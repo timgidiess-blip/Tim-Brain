@@ -66,8 +66,8 @@ function InlineEditor({
 
   const inputCls = "w-full rounded-[6px] px-2 py-[5px] text-[12px] outline-none";
   const inputStyle = {
-    background: "oklch(18% 0.022 255 / 0.7)",
-    border:     "1px solid oklch(35% 0.025 255 / 0.50)",
+    background: "var(--surface-2)",
+    border:     "1px solid var(--border-strong)",
     color:      "var(--ink-0)",
   };
 
@@ -75,7 +75,7 @@ function InlineEditor({
     <div
       className="rounded-[10px] p-[10px] flex flex-col gap-[8px]"
       style={{
-        background:   "oklch(18% 0.025 255 / 0.85)",
+        background:   "var(--surface)",
         border:       `1px solid ${COL}44`,
         backdropFilter: "blur(8px)",
       }}
@@ -103,7 +103,7 @@ function InlineEditor({
       {/* kcal field (highlighted — computed from macros or triggers redistribute) */}
       <div>
         <label className="text-[9px] tracking-[0.08em] font-semibold mb-[3px] flex items-center gap-1"
-               style={{ color: "oklch(55% 0.018 255)" }}>
+               style={{ color: "var(--ink-2)" }}>
           KCAL
           {redistributing && (
             <span className="text-[8px]" style={{ color: COL }}>⟳ redistributing…</span>
@@ -127,7 +127,7 @@ function InlineEditor({
       {/* Macro row: P / C / F */}
       <div>
         <label className="text-[9px] tracking-[0.08em] font-semibold mb-[3px] block"
-               style={{ color: "oklch(55% 0.018 255)" }}>
+               style={{ color: "var(--ink-2)" }}>
           MACROS (g) — editing any field recomputes kcal
         </label>
         <div className="grid grid-cols-3 gap-[5px]">
@@ -146,7 +146,7 @@ function InlineEditor({
             </div>
           ))}
         </div>
-        <div className="text-[9px] text-right mt-[3px]" style={{ color: "oklch(42% 0.018 255)" }}>
+        <div className="text-[9px] text-right mt-[3px]" style={{ color: "var(--ink-2)" }}>
           check: {fmt1(form.p)}×4 + {fmt1(form.c)}×4 + {fmt1(form.f)}×9 = {macroKcal(form.p, form.c, form.f)} kcal
         </div>
       </div>
@@ -158,8 +158,8 @@ function InlineEditor({
           className="text-[11px] px-[8px] py-[4px] rounded-[5px] transition-all"
           style={
             confirmDel
-              ? { background: "oklch(30% 0.15 25 / 0.35)", border: "1px solid var(--danger)", color: "var(--danger)" }
-              : { background: "transparent", border: "1px solid oklch(35% 0.025 255 / 0.45)", color: "var(--ink-2)" }
+              ? { background: "color-mix(in oklch, var(--danger) 18%, transparent)", border: "1px solid var(--danger)", color: "var(--danger)" }
+              : { background: "transparent", border: "1px solid var(--border-strong)", color: "var(--ink-2)" }
           }
         >
           {confirmDel ? "Confirm" : "Delete"}
@@ -168,7 +168,7 @@ function InlineEditor({
         <button
           onClick={onCancel}
           className="text-[11px] px-[8px] py-[4px] rounded-[5px]"
-          style={{ background: "transparent", border: "1px solid oklch(35% 0.025 255 / 0.45)", color: "var(--ink-2)" }}
+          style={{ background: "transparent", border: "1px solid var(--border-strong)", color: "var(--ink-2)" }}
         >
           Cancel
         </button>
@@ -356,7 +356,7 @@ export default function NutritionCard() {
           <svg width={88} height={88} viewBox="0 0 88 88"
                style={{ transform: "rotate(-90deg)" }} aria-hidden>
             <circle cx={44} cy={44} r={R} fill="none"
-                    stroke="oklch(20% 0.025 255)" strokeWidth={7} />
+                    stroke="var(--surface-2)" strokeWidth={7} />
             <circle cx={44} cy={44} r={R} fill="none"
                     stroke={over ? "var(--danger)" : COL}
                     strokeWidth={7}
@@ -373,7 +373,7 @@ export default function NutritionCard() {
             >
               {fmtKcal(totals.kcal)}
             </span>
-            <span className="text-[9px] mt-[2px]" style={{ color: "oklch(42% 0.018 255)" }}>
+            <span className="text-[9px] mt-[2px]" style={{ color: "var(--ink-2)" }}>
               kcal
             </span>
           </div>
@@ -383,15 +383,15 @@ export default function NutritionCard() {
         <div className="flex flex-col gap-[5px] flex-1">
           <div className="text-[11px]" style={{ color: "var(--ink-1)" }}>
             <span className="font-mono">{fmtKcal(TARGETS.kcal)}</span>
-            <span style={{ color: "oklch(42% 0.018 255)" }}> target</span>
+            <span style={{ color: "var(--ink-2)" }}> target</span>
           </div>
-          <div className="text-[11px]" style={{ color: over ? "var(--danger)" : "oklch(55% 0.018 255)" }}>
+          <div className="text-[11px]" style={{ color: over ? "var(--danger)" : "var(--ink-2)" }}>
             {over
               ? <><span className="font-mono">{fmtKcal(totals.kcal - TARGETS.kcal)}</span> over</>
               : <><span className="font-mono">{fmtKcal(remaining)}</span> left</>
             }
           </div>
-          <div className="text-[10px]" style={{ color: "oklch(42% 0.018 255)" }}>
+          <div className="text-[10px]" style={{ color: "var(--ink-2)" }}>
             {Math.round(kcalFraction * 100)}% of goal
           </div>
         </div>
@@ -404,11 +404,11 @@ export default function NutritionCard() {
           const p   = pct(val, target);
           return (
             <div key={key} className="flex items-center gap-[7px]">
-              <span className="text-[10px] shrink-0 w-[42px]" style={{ color: "oklch(55% 0.018 255)" }}>
+              <span className="text-[10px] shrink-0 w-[42px]" style={{ color: "var(--ink-2)" }}>
                 {label}
               </span>
               <div className="flex-1 h-[4px] rounded-full overflow-hidden"
-                   style={{ background: "oklch(20% 0.025 255)" }}>
+                   style={{ background: "var(--surface-2)" }}>
                 <div className="h-full rounded-full"
                      style={{
                        width: `${p}%`,
@@ -417,7 +417,7 @@ export default function NutritionCard() {
                      }} />
               </div>
               <span className="text-[10px] font-mono shrink-0 w-[42px] text-right"
-                    style={{ color: p >= 100 ? fill : "oklch(42% 0.018 255)" }}>
+                    style={{ color: p >= 100 ? fill : "var(--ink-2)" }}>
                 {fmt1(val)}g
               </span>
             </div>
@@ -426,19 +426,19 @@ export default function NutritionCard() {
       </div>
 
       {/* Divider + meal log */}
-      <div style={{ borderTop: "1px solid oklch(28% 0.030 255 / 0.45)" }}>
+      <div style={{ borderTop: "1px solid var(--border)" }}>
         <div className="flex items-center justify-between pt-[10px] mb-[7px]">
           <span className="text-[9px] font-bold tracking-[0.10em] uppercase"
-                style={{ color: "oklch(42% 0.018 255)" }}>
+                style={{ color: "var(--ink-2)" }}>
             Meal Log
           </span>
-          <span className="text-[9px]" style={{ color: "oklch(42% 0.018 255)" }}>
+          <span className="text-[9px]" style={{ color: "var(--ink-2)" }}>
             {meals.length} meal{meals.length !== 1 ? "s" : ""}
           </span>
         </div>
 
         {meals.length === 0 && (
-          <div className="text-center py-3 text-[11px]" style={{ color: "oklch(42% 0.018 255)" }}>
+          <div className="text-center py-3 text-[11px]" style={{ color: "var(--ink-2)" }}>
             No meals logged yet
           </div>
         )}
@@ -464,8 +464,8 @@ export default function NutritionCard() {
                 className="flex items-center w-full rounded-[6px] px-[8px] py-[7px] text-left transition-colors group"
                 style={{ background: "transparent", border: "1px solid transparent" }}
                 onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.background = "oklch(20% 0.022 255 / 0.6)";
-                  (e.currentTarget as HTMLElement).style.borderColor = "oklch(30% 0.025 255 / 0.5)";
+                  (e.currentTarget as HTMLElement).style.background = "var(--surface-2)";
+                  (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
                 }}
                 onMouseLeave={e => {
                   (e.currentTarget as HTMLElement).style.background = "transparent";
@@ -473,7 +473,7 @@ export default function NutritionCard() {
                 }}
               >
                 <span className="text-[10px] font-mono shrink-0 w-[32px]"
-                      style={{ color: "oklch(42% 0.018 255)" }}>
+                      style={{ color: "var(--ink-2)" }}>
                   {meal.t}
                 </span>
                 <span className="flex-1 text-[12px] truncate mx-[6px]" style={{ color: "var(--ink-1)" }}>
@@ -503,8 +503,8 @@ export default function NutritionCard() {
           disabled={adding}
           className="flex-1 rounded-[7px] px-[9px] py-[6px] text-[12px] outline-none"
           style={{
-            background: "oklch(18% 0.022 255 / 0.6)",
-            border:     "1px solid oklch(32% 0.025 255 / 0.50)",
+            background: "var(--surface-2)",
+            border:     "1px solid var(--border)",
             color:      "var(--ink-0)",
           }}
           placeholder={adding ? "Estimating…" : "+ Add meal or food…"}
@@ -514,7 +514,7 @@ export default function NutritionCard() {
           disabled={adding || !addText.trim()}
           className="shrink-0 px-[10px] py-[6px] rounded-[7px] text-[11px] font-bold tracking-[0.04em] transition-all"
           style={{
-            background: adding ? "oklch(22% 0.022 255)" : COL,
+            background: adding ? "var(--surface-2)" : COL,
             color:      adding ? "var(--ink-2)" : "#000",
             opacity:    !addText.trim() && !adding ? 0.45 : 1,
             minWidth:   "42px",
@@ -526,7 +526,7 @@ export default function NutritionCard() {
 
       {/* Estimated note */}
       {meals.some(m => m.estimated) && (
-        <div className="mt-[6px] text-[9px]" style={{ color: "oklch(42% 0.018 255)" }}>
+        <div className="mt-[6px] text-[9px]" style={{ color: "var(--ink-2)" }}>
           <span style={{ color: COL }}>✦</span> AI-estimated — click to edit
         </div>
       )}

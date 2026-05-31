@@ -44,7 +44,7 @@ export default function Clock() {
       <div
         suppressHydrationWarning
         className="text-[10px] tracking-[0.07em] uppercase"
-        style={{ color: "oklch(42% 0.018 255)" }}
+        style={{ color: "var(--ink-2)" }}
       >
         {date}
       </div>

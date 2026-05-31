@@ -7,7 +7,7 @@ import type { FinanceSnapshot } from "@/app/api/finance/route";
 // ── Theme ──────────────────────────────────────────────────────────────────────
 
 const ACCENT = "var(--col-finance)";
-const COL    = "oklch(72% 0.19 145)";
+const COL    = "var(--col-finance)";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -53,13 +53,13 @@ function CategoryBar({
 }) {
   const pct      = maxAbs ? Math.abs(value) / maxAbs : 0;
   const isNeg    = value < 0;
-  const barColor = isNeg ? "oklch(68% 0.22 25)" : COL;
+  const barColor = isNeg ? "var(--danger)" : COL;
 
   return (
     <div className="flex items-center gap-[7px]">
       <span
         className="text-[10px] shrink-0 truncate"
-        style={{ width: 72, color: "oklch(58% 0.016 255)" }}
+        style={{ width: 72, color: "var(--ink-2)" }}
         title={name}
       >
         {name}
@@ -67,7 +67,7 @@ function CategoryBar({
 
       <div
         className="flex-1 h-[4px] rounded-full overflow-hidden"
-        style={{ background: "oklch(20% 0.025 255)" }}
+        style={{ background: "var(--surface-2)" }}
       >
         <div
           className="h-full rounded-full"
@@ -81,7 +81,7 @@ function CategoryBar({
 
       <span
         className="text-[10px] font-mono shrink-0 text-right"
-        style={{ width: 64, color: isNeg ? "oklch(68% 0.22 25)" : "oklch(55% 0.018 255)" }}
+        style={{ width: 64, color: isNeg ? "var(--danger)" : "var(--ink-2)" }}
       >
         {isNeg ? "−" : ""}{fmtNumber(Math.abs(value), currency)}
       </span>
@@ -151,13 +151,13 @@ export default function FinancePulseCard() {
       <div className="flex items-center justify-between mb-[13px]">
         <span
           className="text-[10px] font-bold tracking-[0.12em] uppercase"
-          style={{ color: "oklch(42% 0.018 255)" }}
+          style={{ color: "var(--ink-2)" }}
         >
           Finance Pulse
         </span>
         <div className="flex items-center gap-[6px]">
           {snapshot?.snapshot_at && !refreshing && (
-            <span className="text-[9px]" style={{ color: "oklch(38% 0.018 255)" }}>
+            <span className="text-[9px]" style={{ color: "var(--ink-2)" }}>
               {timeAgo(snapshot.snapshot_at)}
             </span>
           )}
@@ -167,9 +167,9 @@ export default function FinancePulseCard() {
             title="Run fresh snapshot (calls AI)"
             className="w-[22px] h-[22px] rounded-[5px] flex items-center justify-center transition-all text-[12px]"
             style={{
-              background: refreshing ? "oklch(25% 0.025 255)" : "oklch(22% 0.025 255 / 0.7)",
-              border:     `1px solid ${refreshing ? COL + "55" : "oklch(32% 0.025 255 / 0.6)"}`,
-              color:      refreshing ? COL : "oklch(50% 0.018 255)",
+              background: "var(--surface-2)",
+              border:     `1px solid ${refreshing ? `color-mix(in oklch, ${COL} 40%, transparent)` : "var(--border)"}`,
+              color:      refreshing ? COL : "var(--ink-2)",
             }}
           >
             <span
@@ -195,7 +195,7 @@ export default function FinancePulseCard() {
       {!loading && loadError && (
         <div
           className="text-[11px] px-3 py-2 rounded-[7px]"
-          style={{ background: "oklch(22% 0.10 25 / 0.25)", border: "1px solid var(--danger)", color: "var(--danger)" }}
+          style={{ background: "color-mix(in oklch, var(--danger) 12%, transparent)", border: "1px solid var(--danger)", color: "var(--danger)" }}
         >
           {loadError}
         </div>
@@ -204,7 +204,7 @@ export default function FinancePulseCard() {
       {/* ── No snapshot yet ─────────────────────────────────────────────── */}
       {!loading && !loadError && !snapshot && (
         <div className="text-center py-4">
-          <div className="text-[12px] mb-3" style={{ color: "oklch(45% 0.018 255)" }}>
+          <div className="text-[12px] mb-3" style={{ color: "var(--ink-2)" }}>
             No snapshot yet.
           </div>
           <button
@@ -233,11 +233,15 @@ export default function FinancePulseCard() {
           <div className="flex items-center gap-2 mt-[4px] mb-[14px]">
             <span
               className="text-[9px] font-mono px-[6px] py-[1px] rounded-[20px]"
-              style={{ background: `${COL}18`, color: COL, border: `1px solid ${COL}30` }}
+              style={{
+                background: `color-mix(in oklch, ${COL} 10%, transparent)`,
+                color:      COL,
+                border:     `1px solid color-mix(in oklch, ${COL} 19%, transparent)`,
+              }}
             >
               {snapshot.currency}
             </span>
-            <span className="text-[10px]" style={{ color: "oklch(42% 0.018 255)" }}>
+            <span className="text-[10px]" style={{ color: "var(--ink-2)" }}>
               as of {fmtAsOf(snapshot.as_of)}
             </span>
           </div>
@@ -247,7 +251,7 @@ export default function FinancePulseCard() {
             <div className="flex gap-3 mb-[12px]">
               {assets > 0 && (
                 <div>
-                  <div className="text-[9px] tracking-[0.08em] mb-[1px]" style={{ color: "oklch(42% 0.018 255)" }}>
+                  <div className="text-[9px] tracking-[0.08em] mb-[1px]" style={{ color: "var(--ink-2)" }}>
                     ASSETS
                   </div>
                   <div className="text-[12px] font-mono font-semibold" style={{ color: COL }}>
@@ -257,10 +261,10 @@ export default function FinancePulseCard() {
               )}
               {liabs > 0 && (
                 <div>
-                  <div className="text-[9px] tracking-[0.08em] mb-[1px]" style={{ color: "oklch(42% 0.018 255)" }}>
+                  <div className="text-[9px] tracking-[0.08em] mb-[1px]" style={{ color: "var(--ink-2)" }}>
                     LIABILITIES
                   </div>
-                  <div className="text-[12px] font-mono font-semibold" style={{ color: "oklch(68% 0.22 25)" }}>
+                  <div className="text-[12px] font-mono font-semibold" style={{ color: "var(--danger)" }}>
                     {fmtNumber(liabs, snapshot.currency)}
                   </div>
                 </div>
@@ -285,7 +289,7 @@ export default function FinancePulseCard() {
           {refreshErr && (
             <div
               className="mt-3 text-[10px] px-2 py-[5px] rounded-[6px]"
-              style={{ background: "oklch(22% 0.10 25 / 0.20)", border: "1px solid var(--danger)", color: "var(--danger)" }}
+              style={{ background: "color-mix(in oklch, var(--danger) 10%, transparent)", border: "1px solid var(--danger)", color: "var(--danger)" }}
             >
               {refreshErr}
             </div>
@@ -295,7 +299,11 @@ export default function FinancePulseCard() {
           {refreshing && (
             <div
               className="mt-3 text-[10px] px-2 py-[5px] rounded-[6px] text-center"
-              style={{ background: `${COL}12`, border: `1px solid ${COL}30`, color: COL }}
+              style={{
+                background: `color-mix(in oklch, ${COL} 7%, transparent)`,
+                border:     `1px solid color-mix(in oklch, ${COL} 19%, transparent)`,
+                color:      COL,
+              }}
             >
               Running pipeline… Drive → Claude → Supabase
             </div>
