@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://timbrain.vercel.app"),
   title: "Tim's Brain",
   description: "Tim's Brain — capture, organise, and recall everything in one place.",
 };
