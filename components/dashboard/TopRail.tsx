@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useRef, useState } from "react";
 import Clock from "./Clock";
 import ThemeToggle from "./ThemeToggle";
 
@@ -34,6 +35,47 @@ function BrandMark() {
           stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"
         />
       </svg>
+    </div>
+  );
+}
+
+function AvatarMenu() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  async function signOut() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/login";
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-full text-[12px] font-bold text-white"
+        style={{
+          background: "linear-gradient(135deg, oklch(62% 0.24 290), oklch(62% 0.22 340))",
+          border: "2px solid oklch(72% 0.22 290 / 0.45)",
+        }}
+      >
+        TG
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div
+            className="absolute right-0 top-[calc(100%+8px)] z-50 min-w-[140px] rounded-xl border py-1 shadow-lg"
+            style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+          >
+            <button
+              onClick={signOut}
+              className="w-full px-4 py-2 text-left text-sm font-medium text-ink-1 hover:text-ink-0 hover:bg-ink-4 transition-colors"
+            >
+              Sign out
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -96,15 +138,7 @@ export default function TopRail() {
       <div className="flex min-w-[200px] items-center justify-end gap-[12px]">
         <ThemeToggle />
         <Clock />
-        <div
-          className="grid h-[34px] w-[34px] shrink-0 cursor-pointer place-items-center rounded-full text-[12px] font-bold text-white"
-          style={{
-            background: "linear-gradient(135deg, oklch(62% 0.24 290), oklch(62% 0.22 340))",
-            border: "2px solid oklch(72% 0.22 290 / 0.45)",
-          }}
-        >
-          TG
-        </div>
+        <AvatarMenu />
       </div>
     </nav>
   );
