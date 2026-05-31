@@ -9,8 +9,8 @@ export const operator = {
   timezone: "WAT · UTC+1",
 
   // What you're locked in on right now.
-  focus: "Synapse MVP — capture pipeline & dashboard",
+  focus: "Tim's Brain — capture pipeline & dashboard",
 
   // Short project / context tags shown beneath the focus line.
-  tags: ["synapse", "mvp", "Q2-2026"],
+  tags: ["tims-brain", "mvp", "Q2-2026"],
 } as const;

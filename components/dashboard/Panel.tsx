@@ -7,7 +7,7 @@ export function CardHeader({ title, badge }: { title: string; badge: string }) {
     <div className="flex items-center justify-between mb-[13px]">
       <span
         className="text-[10px] font-bold tracking-[0.12em] uppercase"
-        style={{ color: "oklch(42% 0.018 255)" }}
+        style={{ color: "var(--ink-2)" }}
       >
         {title}
       </span>
@@ -34,13 +34,14 @@ interface PanelProps {
 export default function Panel({ accent, children, className = "" }: PanelProps) {
   const style: PanelStyle = {
     "--accent": accent,
-    background: "oklch(16% 0.028 255 / 0.55)",
+    background: "var(--surface)",
     backdropFilter: "blur(18px)",
     WebkitBackdropFilter: "blur(18px)",
     borderTop: `2px solid ${accent}`,
-    borderRight: "1px solid oklch(28% 0.030 255 / 0.55)",
-    borderBottom: "1px solid oklch(28% 0.030 255 / 0.55)",
-    borderLeft: "1px solid oklch(28% 0.030 255 / 0.55)",
+    borderRight: "1px solid var(--border)",
+    borderBottom: "1px solid var(--border)",
+    borderLeft: "1px solid var(--border)",
+    boxShadow: "0 1px 2px oklch(0% 0 0 / 0.04), 0 8px 24px -12px oklch(0% 0 0 / 0.18)",
   };
 
   return (

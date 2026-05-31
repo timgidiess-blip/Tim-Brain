@@ -1,6 +1,7 @@
 export { default as Panel, CardHeader } from "./Panel";
 export { default as Clock } from "./Clock";
 export { default as TopRail } from "./TopRail";
+export { default as ThemeToggle } from "./ThemeToggle";
 export { default as Shell } from "./Shell";
 export { default as OperatorCard } from "./OperatorCard";
 export { default as FinancePulseCard } from "./FinancePulseCard";

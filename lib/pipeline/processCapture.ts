@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { classifyCapture } from "@/lib/router/classifyCapture";
+import { classifyCapture, type CaptureUrgency } from "@/lib/router/classifyCapture";
 import { getDb, type DB } from "@/lib/supabase";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -218,4 +218,99 @@ export async function processCapture(
     routedTo:  routed?.table ?? null,
     routedId:  routed?.id   ?? null,
   };
+}
+
+// ── Urgency override (Telegram inline-button callback) ──────────────────────────
+
+export interface UrgencyOverrideInput {
+  captureId: string;
+  userId:    string;
+  urgency?:  CaptureUrgency;   // set the task's urgency
+  key?:      boolean;          // flag the task as "key"
+}
+
+export interface UrgencyOverrideResult {
+  ok:       boolean;
+  routedTo: string | null;     // 'tasks' when a task was updated
+  title:    string | null;     // task title, for the confirmation message
+  reason?:  string;            // why the override could not be applied
+}
+
+/**
+ * Applies an urgency / key override that the user selected from the Telegram
+ * inline keyboard. The button's callback carries the originating raw_capture id,
+ * so we resolve it to the downstream task it was routed to and patch that task.
+ *
+ * Returns gracefully (ok:false) when the capture was not routed to a task
+ * (e.g. notes / decisions), so the caller can surface a friendly message.
+ */
+export async function applyUrgencyOverride(
+  input: UrgencyOverrideInput,
+): Promise<UrgencyOverrideResult> {
+  const { captureId, userId, urgency, key } = input;
+  const db = getDb();
+
+  // 1. Resolve the capture → downstream row it was routed to.
+  const { data: capture, error: capErr } = await db
+    .from("raw_captures")
+    .select("id, routed_to, routed_id, classification")
+    .eq("id", captureId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (capErr || !capture) {
+    return { ok: false, routedTo: null, title: null, reason: "capture_not_found" };
+  }
+
+  const routedTo = (capture.routed_to as string | null) ?? null;
+  const routedId = (capture.routed_id as string | null) ?? null;
+
+  // 2. Keep the capture's stored classification in sync (best-effort).
+  if (urgency) {
+    const classification =
+      capture.classification && typeof capture.classification === "object"
+        ? (capture.classification as Record<string, unknown>)
+        : {};
+    await db
+      .from("raw_captures")
+      .update({ classification: { ...classification, urgency } })
+      .eq("id", captureId)
+      .eq("user_id", userId);
+  }
+
+  // 3. Only tasks carry an urgency / key flag.
+  if (routedTo !== "tasks" || !routedId) {
+    return { ok: false, routedTo, title: null, reason: "not_a_task" };
+  }
+
+  const patch: Record<string, unknown> = {};
+  if (urgency)            patch.urgency = urgency;
+  if (typeof key === "boolean") patch.key = key;
+  if (Object.keys(patch).length === 0) {
+    return { ok: false, routedTo, title: null, reason: "no_change" };
+  }
+
+  const { data: task, error: taskErr } = await db
+    .from("tasks")
+    .update(patch)
+    .eq("id", routedId)
+    .eq("user_id", userId)
+    .select("title")
+    .single();
+
+  if (taskErr || !task) {
+    console.error("[pipeline] urgency override task update:", taskErr?.message);
+    return { ok: false, routedTo, title: null, reason: "task_update_failed" };
+  }
+
+  // 4. Audit the override.
+  await db.from("audit_log").insert({
+    user_id:       userId,
+    action:        "urgency_override",
+    resource_type: "tasks",
+    resource_id:   routedId,
+    metadata:      { capture_id: captureId, urgency: urgency ?? null, key: key ?? null },
+  });
+
+  return { ok: true, routedTo, title: (task.title as string) ?? null };
 }

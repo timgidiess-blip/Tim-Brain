@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import OpenAI, { toFile } from "openai";
-import { processCapture } from "@/lib/pipeline/processCapture";
+import { processCapture, applyUrgencyOverride } from "@/lib/pipeline/processCapture";
+import type { CaptureUrgency } from "@/lib/router/classifyCapture";
 
 // ── Telegram types ────────────────────────────────────────────────────────────
 
@@ -14,7 +15,17 @@ interface TgMessage {
   text?:  string;
   voice?: TgVoice;
 }
-interface TgUpdate { update_id: number; message?: TgMessage }
+interface TgCallbackQuery {
+  id:       string;
+  from:     TgUser;
+  message?: TgMessage;
+  data?:    string;
+}
+interface TgUpdate {
+  update_id:       number;
+  message?:        TgMessage;
+  callback_query?: TgCallbackQuery;
+}
 interface TgFileResult { file_path: string }
 interface TgResponse<T> { ok: boolean; result?: T }
 
@@ -56,6 +67,37 @@ async function tgSend(
       text,
       parse_mode:   "HTML",
       ...(replyMarkup ? { reply_markup: replyMarkup } : {}),
+    }),
+  });
+}
+
+async function tgAnswerCallback(
+  callbackId: string,
+  text?: string,
+): Promise<void> {
+  await fetch(`https://api.telegram.org/bot${botToken()}/answerCallbackQuery`, {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      callback_query_id: callbackId,
+      ...(text ? { text } : {}),
+    }),
+  });
+}
+
+async function tgEditText(
+  chatId: number,
+  messageId: number,
+  text: string,
+): Promise<void> {
+  await fetch(`https://api.telegram.org/bot${botToken()}/editMessageText`, {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id:    chatId,
+      message_id: messageId,
+      text,
+      parse_mode: "HTML",
     }),
   });
 }
@@ -137,6 +179,71 @@ function buildReply(
   );
 }
 
+// ── Urgency-override callback handling ──────────────────────────────────────────
+
+// Maps the inline-button token → the override to apply.
+const URGENCY_OVERRIDE: Record<string, { urgency?: CaptureUrgency; key?: boolean; label: string }> = {
+  today:   { urgency: "today",      label: "🔴 Today"     },
+  week:    { urgency: "this_week",  label: "🟡 This Week" },
+  month:   { urgency: "this_month", label: "🔵 This Month" },
+  someday: { urgency: "someday",    label: "⚪ Someday"   },
+  key:     { key: true,             label: "🔑 Key"       },
+};
+
+async function handleCallback(cb: TgCallbackQuery): Promise<void> {
+  // Authorize: same single-owner check as messages.
+  const allowedId = parseInt(process.env.TELEGRAM_USER_ID ?? "", 10);
+  if (!allowedId || cb.from.id !== allowedId) {
+    await tgAnswerCallback(cb.id, "Unauthorized");
+    return;
+  }
+
+  const userId = String(cb.from.id);
+
+  // callback_data shape: "urg:<token>:<captureId>"
+  const parts = (cb.data ?? "").split(":");
+  if (parts[0] !== "urg" || parts.length < 3) {
+    await tgAnswerCallback(cb.id);
+    return;
+  }
+  const token     = parts[1] ?? "";
+  const captureId = parts.slice(2).join(":");
+  const override  = URGENCY_OVERRIDE[token];
+
+  if (!override || !captureId) {
+    await tgAnswerCallback(cb.id, "Unknown action");
+    return;
+  }
+
+  const result = await applyUrgencyOverride({
+    captureId,
+    userId,
+    urgency: override.urgency,
+    key:     override.key,
+  });
+
+  if (!result.ok) {
+    const msg =
+      result.reason === "not_a_task"
+        ? "Urgency applies to tasks only"
+        : "Couldn't update — please try again";
+    await tgAnswerCallback(cb.id, msg);
+    return;
+  }
+
+  // Dismiss the button spinner with a toast, and rewrite the message so the
+  // chosen urgency is reflected (and the keyboard is cleared).
+  await tgAnswerCallback(cb.id, `Updated → ${override.label}`);
+  if (cb.message) {
+    const titleLine = result.title ? `\n\n<i>${esc(result.title)}</i>` : "";
+    await tgEditText(
+      cb.message.chat.id,
+      cb.message.message_id,
+      `✅ <b>Updated</b> · urgency set to ${override.label}${titleLine}`,
+    );
+  }
+}
+
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -155,8 +262,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Bad request" }, { status: 400 });
   }
 
+  // Inline-button taps (urgency override) arrive as callback_query, not message.
+  if (update.callback_query) {
+    try {
+      await handleCallback(update.callback_query);
+    } catch (err) {
+      console.error("[webhook] callback error:", err);
+      try { await tgAnswerCallback(update.callback_query.id, "Something went wrong"); }
+      catch { /* best-effort */ }
+    }
+    return NextResponse.json({ ok: true });
+  }
+
   const message = update.message;
-  if (!message) return NextResponse.json({ ok: true }); // e.g. callback_query
+  if (!message) return NextResponse.json({ ok: true });
 
   const chatId = message.chat.id;
 
@@ -198,11 +317,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       audioUrl,
     });
 
-    // 9. Reply with confirmation + urgency override keyboard
+    // 9. Reply with confirmation. Only tasks carry an urgency the user can
+    //    override, so the keyboard is attached for those captures only.
     await tgSend(
       chatId,
       buildReply(result.kind, result.urgency, result.tags, result.summary, result.llmSource),
-      urgencyKeyboard(result.captureId),
+      result.routedTo === "tasks" ? urgencyKeyboard(result.captureId) : undefined,
     );
 
     return NextResponse.json({ ok: true });
