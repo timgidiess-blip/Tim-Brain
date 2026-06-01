@@ -20,7 +20,7 @@ interface Meal {
 
 const ACCENT   = "var(--col-nutrition)";
 const COL      = "oklch(72% 0.19 158)";
-const TARGETS  = { kcal: 2000, p: 150, c: 200, f: 67 } as const;
+const TARGETS  = { kcal: 2600, p: 150, c: 200, f: 67 } as const;
 const R        = 38;
 const CIRC     = 2 * Math.PI * R;
 
